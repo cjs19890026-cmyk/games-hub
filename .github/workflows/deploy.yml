@@ -1,0 +1,29 @@
+name: Deploy to CloudBase
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装 CloudBase CLI
+        run: npm install -g @cloudbase/cli
+
+      - name: 部署静态网站到 CloudBase
+        env:
+          TCB_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
+          TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
+          TENCENTCLOUD_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
+          TENCENTCLOUD_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
+        run: tcb hosting deploy ./ /game -e cnuocnuo0026-d6gmy0w5ja740e8e5
