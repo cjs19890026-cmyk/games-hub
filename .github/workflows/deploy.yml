@@ -27,4 +27,6 @@ jobs:
         run: tcb login --apiKeyId "$TCB_SECRET_ID" --apiKey "$TCB_SECRET_KEY"
 
       - name: 部署静态网站到 CloudBase
-        run: tcb hosting deploy ./ /game -e cnuocnuo0026-d6gmy0w5ja740e8e5
+        run: |
+          rm -rf .git
+          tcb hosting deploy ./ /game -e cnuocnuo0026-d6gmy0w5ja740e8e5
