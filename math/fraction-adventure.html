@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分数大冒险 Fraction Adventure</title>
+<style>
+  :root{
+    --ink:#333333;      /* 正文黑字 */
+    --title:#111111;    /* 标题黑 */
+    --en:#2c3e9b;       /* EN 蓝 */
+    --zh:#c44569;       /* ZH 粉 */
+    --hl:#ff8f3f;       /* 涂色高亮 */
+    --line:#333333;     /* 等分线 */
+    --star:#f5b301;     /* 星星金 */
+    --ok:#2e9e5b;       /* 答对绿 */
+    --bad:#d64550;      /* 答错红 */
+    --card:#ffffff;     /* 控件白底 */
+    --page:#fdfbf7;     /* 页面底色（纯色，非控件） */
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--page); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:20px; line-height:1.6;
+  }
+  .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 64px; }
+
+  /* ---------- 通用控件（全部白底黑字，不透明） ---------- */
+  .btn{
+    background:var(--card); color:var(--ink);
+    border:3px solid var(--ink); border-radius:18px;
+    padding:18px 28px; font-size:26px; font-weight:700;
+    cursor:pointer; user-select:none; touch-action:manipulation;
+    box-shadow:0 4px 0 #dcd6c9;
+  }
+  .btn:active{ transform:translateY(3px); box-shadow:0 1px 0 #dcd6c9; }
+  .btn:disabled{ background:#eeeeee; color:#999999; border-color:#bbbbbb; box-shadow:none; cursor:not-allowed; }
+  .btn.primary{ border-color:var(--en); }
+  .btn.small{ font-size:20px; padding:10px 18px; border-radius:14px; }
+
+  .card{
+    background:var(--card); border:3px solid var(--ink);
+    border-radius:22px; padding:22px; box-shadow:0 5px 0 #dcd6c9;
+  }
+
+  .en{ color:var(--en); }
+  .zh{ color:var(--zh); }
+
+  /* ---------- 首页 ---------- */
+  .home-title{ font-size:52px; font-weight:900; color:var(--title); margin:18px 0 4px; text-align:center; }
+  .home-sub{ font-size:24px; color:var(--title); text-align:center; margin:0 0 8px; font-weight:700; }
+  .home-tip{ text-align:center; margin:0 0 26px; }
+  .map{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; }
+  .level-card{ text-align:center; cursor:pointer; transition:transform .12s; }
+  .level-card:active{ transform:scale(.97); }
+  .level-card .icon{ font-size:56px; line-height:1.2; }
+  .level-card .lv-zh{ font-size:30px; font-weight:900; color:var(--zh); margin-top:6px; }
+  .level-card .lv-en{ font-size:18px; font-weight:700; color:var(--en); letter-spacing:.5px; }
+  .level-card .lv-desc{ font-size:18px; color:var(--ink); margin-top:8px; }
+  .level-card .stars{ font-size:30px; margin-top:10px; letter-spacing:4px; }
+  .level-card.locked{ background:#f0f0f0; border-color:#aaaaaa; cursor:not-allowed; }
+  .level-card.locked .lv-zh,.level-card.locked .lv-desc{ color:#888888; }
+  .home-foot{ text-align:center; margin-top:30px; }
+
+  /* ---------- 关卡页 ---------- */
+  .bar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .bar h2{ font-size:36px; font-weight:900; color:var(--title); margin:0; }
+  .chip{ display:inline-block; font-size:16px; font-weight:800; padding:4px 12px; border:2px solid currentColor; border-radius:999px; vertical-align:middle; }
+
+  .script-card{
+    background:var(--card); border:3px solid var(--ink); border-left:14px solid var(--zh);
+    border-radius:16px; padding:16px 20px; margin:14px 0 22px; box-shadow:0 4px 0 #dcd6c9;
+  }
+  .script-card .tag{ font-weight:900; font-size:18px; margin-bottom:6px; }
+  .script-card p{ margin:0; font-size:22px; }
+
+  .hint{ font-size:20px; font-weight:700; margin:6px 0 14px; }
+  .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .tog.on{ background:#eef1fb; border-color:var(--en); }
+
+  .stage{ display:flex; gap:28px; flex-wrap:wrap; align-items:center; justify-content:center; margin:8px 0 18px; }
+  .shape-box{ background:var(--card); border:3px solid var(--ink); border-radius:22px; padding:18px; box-shadow:0 5px 0 #dcd6c9; }
+  .shape-svg{ display:block; width:min(400px,78vw); height:auto; }
+  .shape-svg.wide{ width:min(560px,84vw); }
+  .shape-svg.mini{ width:min(300px,60vw); }
+  .slice{ fill:var(--hl); fill-opacity:0; transition:fill-opacity .45s; pointer-events:none; }
+  .slice.on{ fill-opacity:1; }
+  svg.ready .slice{ pointer-events:auto; cursor:pointer; }
+  .dline{ stroke:var(--line); stroke-width:3; stroke-linecap:round; }
+  .outline{ stroke:var(--line); stroke-width:3.5; }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+
+  .frac-panel{ min-width:240px; text-align:center; }
+  .frac{ display:inline-flex; flex-direction:column; align-items:center; font-weight:900; color:var(--ink); line-height:1.05; vertical-align:middle; }
+  .frac .fn{ border-bottom:.12em solid var(--ink); padding:0 .22em; }
+  .frac-say{ font-size:24px; font-weight:700; margin-top:10px; }
+  .pop{ animation:pop .4s; }
+  @keyframes pop{ 0%{ transform:scale(.4);} 70%{ transform:scale(1.12);} 100%{ transform:scale(1);} }
+
+  /* ---------- 比大小 ---------- */
+  .vs-wrap{ display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap; }
+  .vs-item{ text-align:center; }
+  .vs-sym{ font-size:56px; font-weight:900; min-width:96px; text-align:center; color:var(--title); }
+  .fb{ font-size:24px; font-weight:800; margin-top:14px; padding:14px 18px; border-radius:16px; border:3px solid transparent; }
+  .fb.ok{ background:#e7f6ec; border-color:var(--ok); color:var(--ok); }
+  .fb.bad{ background:#fdecea; border-color:var(--bad); color:var(--bad); }
+  .fb.plain{ background:#f6f3ea; border-color:#cfc8b8; color:var(--ink); }
+
+  /* ---------- 测验 ---------- */
+  .quiz-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .quiz-head .stat{ font-size:22px; font-weight:800; }
+  .opts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-top:18px; }
+  .opt{ background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:18px;
+        padding:20px 12px; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #dcd6c9;
+        display:flex; align-items:center; justify-content:center; min-height:86px; user-select:none; }
+  .opt:active{ transform:translateY(3px); box-shadow:0 1px 0 #dcd6c9; }
+  .opt.ok{ background:#e7f6ec; border-color:var(--ok); }
+  .opt.bad{ background:#fdecea; border-color:var(--bad); }
+  .q-text{ font-size:30px; font-weight:900; color:var(--title); margin:8px 0 4px; text-align:center; }
+
+  /* ---------- 结果页 ---------- */
+  .result{ text-align:center; padding-top:24px; }
+  .result .big-score{ font-size:88px; font-weight:900; color:var(--title); line-height:1.1; }
+  .result .big-stars{ font-size:64px; letter-spacing:8px; margin:10px 0; }
+  .result .msg{ font-size:28px; font-weight:800; margin:12px 0 26px; }
+
+  .footer-actions{ text-align:center; margin-top:26px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  #toast{
+    position:fixed; left:50%; bottom:40px; transform:translateX(-50%);
+    background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:16px;
+    padding:14px 26px; font-size:22px; font-weight:800; box-shadow:0 5px 0 #dcd6c9;
+    display:none; z-index:99;
+  }
+  #muteBtn{ position:fixed; top:14px; right:14px; z-index:99; }
+
+  @media (max-width:640px){
+    .home-title{ font-size:40px; }
+    .btn{ font-size:22px; padding:16px 20px; }
+    .q-text{ font-size:26px; }
+  }
+</style>
+</head>
+<body>
+<button id="muteBtn" class="btn small" onclick="toggleMute()">🔊</button>
+<div id="toast"></div>
+
+<!-- ================= 首页：关卡地图 ================= -->
+<div id="view-home" class="wrap">
+  <h1 class="home-title">分数大冒险</h1>
+  <p class="home-sub">My First Fractions · 分数的初步认识</p>
+  <p class="home-tip"><span class="chip en">For Parents</span> <span class="chip zh">家长须知</span></p>
+  <div class="script-card" style="margin-top:0">
+    <div class="tag"><span class="zh">家长口播</span> · <span class="en">Parent Script</span></div>
+    <p>宝贝，今天我们来玩一个“分蛋糕”的游戏。蛋糕要分得公平，每一块都一样大，这就是数学里的“平均分”。一关一关闯，最后还有 10 道题的挑战，看看你能拿多少分！</p>
+  </div>
+  <div id="map" class="map"></div>
+  <div class="home-foot">
+    <button class="btn small" onclick="resetAll()">🗑 重置闯关进度</button>
+  </div>
+</div>
+
+<!-- ================= 关卡页（1/2/3 共用容器） ================= -->
+<div id="view-level" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="goHome()">← 返回地图</button>
+    <h2 id="lvTitle"></h2>
+    <span id="lvChipEn" class="chip en"></span>
+    <span id="lvChipZh" class="chip zh"></span>
+  </div>
+  <div class="script-card">
+    <div class="tag"><span class="zh">家长口播</span> · <span class="en">Parent Script</span></div>
+    <p id="lvScript"></p>
+  </div>
+  <div id="levelBody"></div>
+  <div class="footer-actions">
+    <button id="completeBtn" class="btn primary" disabled onclick="completeLevel()">我学会了，完成本关 ⭐</button>
+  </div>
+</div>
+
+<!-- ================= 测验页 ================= -->
+<div id="view-quiz" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="goHome()">← 返回地图</button>
+    <h2>终极测验</h2>
+    <span class="chip en">Quiz Challenge</span>
+    <span class="chip zh">10 题冲关</span>
+  </div>
+  <div class="script-card">
+    <div class="tag"><span class="zh">家长口播</span> · <span class="en">Parent Script</span></div>
+    <p>一共 10 道题，答对加 10 分、答错扣 5 分。仔细看图、想一想再点答案，爸爸妈妈相信你能拿满分！</p>
+  </div>
+  <div class="quiz-head">
+    <div class="stat" id="quizProg"></div>
+    <div class="stat">当前得分：<span id="quizScore">0</span> 分</div>
+  </div>
+  <div class="card" id="quizBody"></div>
+  <div id="quizFb"></div>
+  <div class="footer-actions">
+    <button id="quizNext" class="btn primary" style="display:none" onclick="nextQ()">下一题 →</button>
+  </div>
+</div>
+
+<!-- ================= 结果页 ================= -->
+<div id="view-result" class="wrap" style="display:none">
+  <div class="result card">
+    <h2 style="font-size:38px;color:var(--title);margin:0">挑战结束！</h2>
+    <div class="big-stars" id="rStars"></div>
+    <div class="big-score"><span id="rScore">0</span> 分</div>
+    <div class="msg" id="rMsg"></div>
+    <div class="footer-actions" style="margin-top:6px">
+      <button class="btn primary" onclick="startQuiz()">🔁 再挑战一次</button>
+      <button class="btn" onclick="goHome()">🏠 回到地图</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   数据区（全部内嵌，离线可用）
+===================================================== */
+var LEVELS = [
+  { id:1, icon:'🍰', zh:'几分之一', en:'Unit Fractions', desc:'平均分一分，认识 1/2、1/3……' },
+  { id:2, icon:'🎨', zh:'几分之几', en:'Some Parts',    desc:'涂几份，就是几分之几' },
+  { id:3, icon:'⚖️', zh:'比大小',   en:'Compare',       desc:'哪一边更大？看图就知道' },
+  { id:4, icon:'🏆', zh:'终极测验', en:'Quiz Challenge', desc:'10 道题，答对 +10、答错 −5' }
+];
+
+var SCRIPTS = {
+  1:'宝贝你看，把蛋糕平均分成几份，每一份都一样大，其中的一份就是“几分之一”——平均分成 2 份，一份就是二分之一，写作 1/2。分数线下面的数表示分成了几份，上面的 1 表示涂了 1 份。',
+  2:'如果涂色的不止一份呢？就看“平均分成几份、涂了几份”：分成 3 份、涂了 2 份，就是三分之二，写作 2/3。下面的数不变，涂几份上面就写几。',
+  3:'比大小有两招：分母相同，比分子，分子大的分数更大；分子都是 1 的时候，分的份数越多，每一份反而越小，所以 1/3 比 1/4 大。不信你看图！',
+  4:'一共 10 道题，答对加 10 分、答错扣 5 分。仔细看图、想一想再点答案，爸爸妈妈相信你能拿满分！'
+};
+
+/* 比大小题组：[左分子,左分母,右分子,右分母] */
+var PAIRS = {
+  same: [ [2,5,3,5], [3,4,2,4], [1,6,4,6] ],
+  unit: [ [1,3,1,4], [1,2,1,5], [1,4,1,6] ]
+};
+
+/* 测验题库（10 题）。opts: {f:[分子,分母]} 分数 / {s:'文字'} / 比较题为符号 */
+var QUIZ = [
+  { t:'shape', shape:'circle', parts:2, colored:1, q:'涂色部分是整个圆的几分之几？',
+    opts:[{f:[1,2]},{f:[1,3]},{f:[1,4]}], a:0, ex:'平均分成 2 份、涂 1 份，就是 1/2。' },
+  { t:'shape', shape:'rect', parts:4, colored:1, q:'涂色部分是整个长方形的几分之几？',
+    opts:[{f:[1,2]},{f:[1,4]},{f:[1,3]}], a:1, ex:'平均分成 4 份、涂 1 份，就是 1/4。' },
+  { t:'shape', shape:'rect', parts:5, colored:3, q:'涂色部分用分数怎么表示？',
+    opts:[{f:[2,5]},{f:[3,5]},{f:[1,5]}], a:1, ex:'平均分成 5 份、涂 3 份，就是 3/5。' },
+  { t:'shape', shape:'circle', parts:3, colored:2, q:'涂色部分用分数怎么表示？',
+    opts:[{f:[1,3]},{f:[2,3]},{f:[1,2]}], a:1, ex:'平均分成 3 份、涂 2 份，就是 2/3。' },
+  { t:'cmp', l:[2,5], r:[3,5], a:'<', ex:'分母都是 5，比分子：2 < 3，所以 2/5 < 3/5。' },
+  { t:'cmp', l:[1,3], r:[1,4], a:'>', ex:'分子都是 1，分的份数越少每份越大：1/3 > 1/4。' },
+  { t:'cmp', l:[4,6], r:[2,6], a:'>', ex:'分母相同比分子，4 > 2，所以 4/6 > 2/6。' },
+  { t:'text', q:'把一个月饼平均分给 4 个小朋友，每个小朋友分到多少？',
+    opts:[{f:[1,2]},{f:[1,3]},{f:[1,4]}], a:2, ex:'平均分成 4 份，每人得到其中的 1 份，就是 1/4。' },
+  { t:'text', q:'分数 3/4 读作什么？',
+    opts:[{s:'三分之四'},{s:'四分之三'},{s:'四比三'}], a:1, ex:'读分数从下往上读：四分之三。' },
+  { t:'shape', shape:'circle', parts:5, colored:1, q:'涂色部分是整个圆的几分之几？',
+    opts:[{f:[1,4]},{f:[1,5]},{f:[4,5]}], a:1, ex:'平均分成 5 份、涂 1 份，就是 1/5。' }
+];
+
+/* =====================================================
+   全局状态与存档
+===================================================== */
+var SAVE_KEY = 'fraction-adventure-v1';
+var G = { unlocked:1, stars:{1:0,2:0,3:0,4:0}, best:0, muted:false };
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }catch(e){} }
+function load(){
+  try{
+    var s = localStorage.getItem(SAVE_KEY);
+    if(s){ var o = JSON.parse(s);
+      G.unlocked = o.unlocked || 1;
+      G.best = o.best || 0;
+      G.muted = !!o.muted;
+      if(o.stars){ for(var k in G.stars){ G.stars[k] = o.stars[k] || 0; } }
+    }
+  }catch(e){}
+}
+
+var curLevel = 0;   // 当前所在关卡（1/2/3），0=不在关卡
+var L = {};          // 关卡内临时状态
+
+/* =====================================================
+   工具：分数 HTML / 图形生成
+===================================================== */
+function F(n, d, size){
+  size = size || 44;
+  return '<span class="frac" style="font-size:'+size+'px"><span class="fn">'+n+'</span><span class="fd">'+d+'</span></span>';
+}
+function starStr(n, total){
+  var s = '';
+  for(var i=0;i<total;i++){ s += i<n ? '<span style="color:var(--star)">★</span>' : '<span style="color:#c9c2b2">☆</span>'; }
+  return s;
+}
+function slicePath(cx, cy, r, i, n){
+  var a0 = -Math.PI/2 + i*2*Math.PI/n;
+  var a1 = -Math.PI/2 + (i+1)*2*Math.PI/n;
+  var x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+  var x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+  var large = (2*Math.PI/n) > Math.PI ? 1 : 0;
+  return 'M '+cx+' '+cy+' L '+x0.toFixed(2)+' '+y0.toFixed(2)+
+         ' A '+r+' '+r+' 0 '+large+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+' Z';
+}
+/* coloredArr: true/false 数组；staticMode=true 时无动画直接显示 */
+function circleSVG(parts, coloredArr, staticMode, extraClass){
+  var r = 90, c = 100, i, s = '';
+  for(i=0;i<parts;i++){
+    var on = coloredArr && coloredArr[i] ? ' on' : '';
+    s += '<path class="slice'+on+'" data-i="'+i+'" d="'+slicePath(c,c,r,i,parts)+'"></path>';
+  }
+  s += '<circle class="outline" cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none"></circle>';
+  for(i=0;i<parts;i++){
+    var a = -Math.PI/2 + i*2*Math.PI/parts;
+    var x = c + r*Math.cos(a), y = c + r*Math.sin(a);
+    var style = staticMode ? '' : ' style="stroke-dasharray:90;stroke-dashoffset:90;animation:draw .5s '+(0.09*i).toFixed(2)+'s forwards"';
+    s += '<line class="dline" x1="'+c+'" y1="'+c+'" x2="'+x.toFixed(2)+'" y2="'+y.toFixed(2)+'"'+style+'></line>';
+  }
+  return '<svg viewBox="0 0 200 200" class="shape-svg '+(extraClass||'')+'">'+s+'</svg>';
+}
+function rectSVG(parts, coloredArr, staticMode, extraClass){
+  var W = 360, H = 120, i, s = '', w = W/parts;
+  for(i=0;i<parts;i++){
+    var on = coloredArr && coloredArr[i] ? ' on' : '';
+    s += '<rect class="slice'+on+'" data-i="'+i+'" x="'+(i*w).toFixed(2)+'" y="0" width="'+w.toFixed(2)+'" height="'+H+'"></rect>';
+  }
+  s += '<rect class="outline" x="0" y="0" width="'+W+'" height="'+H+'" fill="none" rx="6"></rect>';
+  for(i=1;i<parts;i++){
+    var style = staticMode ? '' : ' style="stroke-dasharray:120;stroke-dashoffset:120;animation:draw .5s '+(0.09*i).toFixed(2)+'s forwards"';
+    s += '<line class="dline" x1="'+(i*w).toFixed(2)+'" y1="0" x2="'+(i*w).toFixed(2)+'" y2="'+H+'"'+style+'></line>';
+  }
+  return '<svg viewBox="0 0 '+W+' '+H+'" class="shape-svg wide '+(extraClass||'')+'">'+s+'</svg>';
+}
+function shapeSVG(shape, parts, coloredArr, staticMode, extraClass){
+  return shape === 'circle' ? circleSVG(parts, coloredArr, staticMode, extraClass)
+                            : rectSVG(parts, coloredArr, staticMode, extraClass);
+}
+
+/* =====================================================
+   音效（WebAudio，离线）
+===================================================== */
+var AC = null;
+function tone(freq, start, dur, type){
+  var o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, AC.currentTime + start);
+  g.gain.linearRampToValueAtTime(0.25, AC.currentTime + start + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + start + dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime + start); o.stop(AC.currentTime + start + dur + 0.05);
+}
+function sfx(ok){
+  if(G.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended'){ AC.resume(); }
+    if(ok){ tone(660, 0, 0.18); tone(880, 0.16, 0.3); }
+    else  { tone(220, 0, 0.28, 'sawtooth'); }
+  }catch(e){}
+}
+function toggleMute(){
+  G.muted = !G.muted; save();
+  document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+}
+
+/* =====================================================
+   视图切换 / 首页
+===================================================== */
+function showView(id){
+  var vs = ['view-home','view-level','view-quiz','view-result'];
+  for(var i=0;i<vs.length;i++){
+    document.getElementById(vs[i]).style.display = (vs[i]===id) ? '' : 'none';
+  }
+  window.scrollTo(0,0);
+}
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._tm); t._tm = setTimeout(function(){ t.style.display='none'; }, 2200);
+}
+function goHome(){ renderHome(); showView('view-home'); curLevel = 0; }
+function renderHome(){
+  var html = '';
+  for(var i=0;i<LEVELS.length;i++){
+    var lv = LEVELS[i], locked = lv.id > G.unlocked;
+    html += '<div class="card level-card'+(locked?' locked':'')+'" '+(locked?'':'onclick="openLevel('+lv.id+')"')+'>'
+          +   '<div class="icon">'+(locked?'🔒':lv.icon)+'</div>'
+          +   '<div class="lv-zh">第 '+lv.id+' 关 · '+lv.zh+'</div>'
+          +   '<div class="lv-en">'+lv.en+'</div>'
+          +   '<div class="lv-desc">'+(locked?'先闯过前面的关卡就能解锁':'点击开始闯关')+'</div>'
+          +   '<div class="stars">'+starStr(G.stars[lv.id], lv.id===4?3:1)+'</div>'
+          + '</div>';
+  }
+  document.getElementById('map').innerHTML = html;
+}
+function resetAll(){
+  if(confirm('确定要清空所有星星和得分，重新开始吗？')){
+    G = { unlocked:1, stars:{1:0,2:0,3:0,4:0}, best:0, muted:G.muted };
+    save(); renderHome(); showToast('进度已重置');
+  }
+}
+
+/* =====================================================
+   关卡通用
+===================================================== */
+function openLevel(id){
+  if(id === 4){ startQuiz(); return; }
+  curLevel = id;
+  var lv = LEVELS[id-1];
+  document.getElementById('lvTitle').textContent = '第 '+id+' 关 · '+lv.zh;
+  document.getElementById('lvChipEn').textContent = lv.en;
+  document.getElementById('lvChipZh').textContent = lv.zh;
+  document.getElementById('lvScript').textContent = SCRIPTS[id];
+  var cb = document.getElementById('completeBtn');
+  cb.disabled = true;
+  if(id===1) renderLevel1();
+  if(id===2) renderLevel2();
+  if(id===3) renderLevel3();
+  showView('view-level');
+}
+function enableComplete(){
+  document.getElementById('completeBtn').disabled = false;
+}
+function completeLevel(){
+  G.stars[curLevel] = Math.max(G.stars[curLevel], 1);
+  if(curLevel < 4){ G.unlocked = Math.max(G.unlocked, curLevel+1); }
+  save(); sfx(true);
+  showToast('🎉 太棒了！获得一颗星星，解锁下一关！');
+  goHome();
+}
+
+/* =====================================================
+   第 1 关：几分之一
+===================================================== */
+function renderLevel1(){
+  L = { shape:'circle', parts:0, tried:{} };
+  document.getElementById('levelBody').innerHTML =
+      '<p class="hint">① 先选一种图形，② 再点按钮把它“平均分”，看看涂色的是几分之一：</p>'
+    + '<div class="row">'
+    +   '<button id="tgCircle" class="btn tog on" onclick="setShape1(\'circle\')">⭕ 圆形 <span class="en">Circle</span></button>'
+    +   '<button id="tgRect" class="btn tog" onclick="setShape1(\'rect\')">▭ 长方形 <span class="en">Rectangle</span></button>'
+    + '</div>'
+    + '<div class="row">'
+    +   '<span style="font-size:22px;font-weight:800">平均分成：</span>'
+    +   [2,3,4,5].map(function(n){ return '<button class="btn" onclick="divide1('+n+')">'+n+' 份</button>'; }).join('')
+    + '</div>'
+    + '<div class="stage"><div class="shape-box" id="stage1"><div style="width:min(400px,78vw);height:300px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#a89f8c">点上面的按钮，开始分蛋糕！</div></div>'
+    + '<div class="card frac-panel" id="panel1" style="visibility:hidden"></div></div>';
+}
+function setShape1(s){
+  L.shape = s;
+  document.getElementById('tgCircle').className = 'btn tog' + (s==='circle'?' on':'');
+  document.getElementById('tgRect').className = 'btn tog' + (s==='rect'?' on':'');
+  if(L.parts){ divide1(L.parts); }
+}
+function divide1(n){
+  L.parts = n; L.tried[n] = true;
+  var colored = []; for(var i=0;i<n;i++){ colored.push(false); }
+  var box = document.getElementById('stage1');
+  box.innerHTML = shapeSVG(L.shape, n, colored, false);
+  var panel = document.getElementById('panel1');
+  panel.style.visibility = 'hidden';
+  setTimeout(function(){
+    var p = box.querySelector('path[data-i="0"], rect[data-i="0"]');
+    if(p){ p.classList.add('on'); }
+    panel.innerHTML = F(1, n, 72)
+      + '<div class="frac-say">平均分成 <b>'+n+'</b> 份<br>涂色 <b>1</b> 份 = <b class="zh">'+['','','二','三','四','五'][n]+'分之一</b></div>';
+    panel.style.visibility = 'visible';
+    panel.classList.remove('pop'); void panel.offsetWidth; panel.classList.add('pop');
+    sfx(true);
+  }, 850);
+  var cnt = 0; for(var k in L.tried){ cnt++; }
+  if(cnt >= 2){ enableComplete(); }
+}
+
+/* =====================================================
+   第 2 关：几分之几
+===================================================== */
+function renderLevel2(){
+  L = { shape:'circle', parts:0, colored:[], ready:false, maxK:0 };
+  document.getElementById('levelBody').innerHTML =
+      '<p class="hint">① 点按钮平均分，② 再点“涂 1 份”（也可以直接点图形上的小块涂色），看看是几分之几：</p>'
+    + '<div class="row">'
+    +   '<button id="tgCircle" class="btn tog on" onclick="setShape2(\'circle\')">⭕ 圆形 <span class="en">Circle</span></button>'
+    +   '<button id="tgRect" class="btn tog" onclick="setShape2(\'rect\')">▭ 长方形 <span class="en">Rectangle</span></button>'
+    + '</div>'
+    + '<div class="row">'
+    +   '<span style="font-size:22px;font-weight:800">平均分成：</span>'
+    +   [3,4,5].map(function(n){ return '<button class="btn" onclick="divide2('+n+')">'+n+' 份</button>'; }).join('')
+    +   '<button class="btn primary" id="paintBtn" onclick="paintNext()" disabled>🖌 涂 1 份</button>'
+    + '</div>'
+    + '<div class="stage"><div class="shape-box" id="stage2" onclick="stage2Click(event)"><div style="width:min(400px,78vw);height:300px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#a89f8c">先平均分，再来涂色！</div></div>'
+    + '<div class="card frac-panel" id="panel2" style="visibility:hidden"></div></div>';
+}
+function setShape2(s){
+  L.shape = s;
+  document.getElementById('tgCircle').className = 'btn tog' + (s==='circle'?' on':'');
+  document.getElementById('tgRect').className = 'btn tog' + (s==='rect'?' on':'');
+  if(L.parts){ divide2(L.parts); }
+}
+function divide2(n){
+  L.parts = n; L.ready = false;
+  L.colored = []; for(var i=0;i<n;i++){ L.colored.push(false); }
+  var box = document.getElementById('stage2');
+  box.innerHTML = shapeSVG(L.shape, n, L.colored, false);
+  document.getElementById('panel2').style.visibility = 'hidden';
+  document.getElementById('paintBtn').disabled = true;
+  setTimeout(function(){
+    L.ready = true;
+    var svg = box.querySelector('svg'); if(svg){ svg.classList.add('ready'); }
+    document.getElementById('paintBtn').disabled = false;
+    updatePanel2();
+  }, 850);
+}
+function stage2Click(ev){
+  if(!L.ready){ return; }
+  var t = ev.target;
+  if(t && t.classList && t.classList.contains('slice')){
+    toggleSlice2(parseInt(t.getAttribute('data-i'), 10));
+  }
+}
+function toggleSlice2(i){
+  L.colored[i] = !L.colored[i];
+  var box = document.getElementById('stage2');
+  var p = box.querySelector('[data-i="'+i+'"]');
+  if(p){ p.classList.toggle('on', L.colored[i]); }
+  sfx(true);
+  updatePanel2();
+}
+function paintNext(){
+  if(!L.ready){ return; }
+  for(var i=0;i<L.colored.length;i++){
+    if(!L.colored[i]){ toggleSlice2(i); return; }
+  }
+  showToast('全部都涂满啦！换一种分法试试');
+}
+function updatePanel2(){
+  var k = 0; for(var i=0;i<L.colored.length;i++){ if(L.colored[i]){ k++; } }
+  L.maxK = Math.max(L.maxK, k);
+  var panel = document.getElementById('panel2');
+  if(k === 0){ panel.style.visibility = 'hidden'; return; }
+  var cn = ['','一','二','三','四','五'];
+  panel.innerHTML = F(k, L.parts, 72)
+    + '<div class="frac-say">'+L.parts+' 份中涂了 <b>'+k+'</b> 份<br>= <b class="zh">'+cn[L.parts]+'分之'+cn[k]+'</b></div>';
+  panel.style.visibility = 'visible';
+  panel.classList.remove('pop'); void panel.offsetWidth; panel.classList.add('pop');
+  if(L.maxK >= 2){ enableComplete(); }
+}
+
+/* =====================================================
+   第 3 关：比大小
+===================================================== */
+function renderLevel3(){
+  L = { mode:'same', idx:0, correct:0, answered:false };
+  document.getElementById('levelBody').innerHTML =
+      '<p class="hint">看看两边的涂色部分，想一想：中间的 ○ 里应该填 <b>&lt;</b>、<b>=</b> 还是 <b>&gt;</b>？答对 2 组就能过关！</p>'
+    + '<div class="row">'
+    +   '<button id="mdSame" class="btn tog on" onclick="setMode3(\'same\')">分母相同 <span class="en">Same Bottom</span></button>'
+    +   '<button id="mdUnit" class="btn tog" onclick="setMode3(\'unit\')">分子都是 1 <span class="en">Top is 1</span></button>'
+    + '</div>'
+    + '<div id="pairBox"></div>'
+    + '<div class="row" style="justify-content:center" id="cmpBtns">'
+    +   ['<','=','>'].map(function(s){ return '<button class="btn" style="font-size:34px;min-width:96px" onclick="answer3(\''+s+'\')">'+s+'</button>'; }).join('')
+    + '</div>'
+    + '<div id="fb3"></div>'
+    + '<div class="footer-actions"><button id="nextPair" class="btn" style="display:none" onclick="nextPair3()">换一组 →</button></div>';
+  renderPair3();
+}
+function setMode3(m){
+  L.mode = m; L.idx = 0; L.answered = false;
+  document.getElementById('mdSame').className = 'btn tog' + (m==='same'?' on':'');
+  document.getElementById('mdUnit').className = 'btn tog' + (m==='unit'?' on':'');
+  document.getElementById('fb3').innerHTML = '';
+  document.getElementById('nextPair').style.display = 'none';
+  setCmpBtns3(true);
+  renderPair3();
+}
+function pairFracHTML(n, d){
+  return '<div style="margin-top:8px">'+F(n, d, 48)+'</div>';
+}
+function renderPair3(){
+  var p = PAIRS[L.mode][L.idx];
+  var lc = [], rc = [], i;
+  for(i=0;i<p[1];i++){ lc.push(i < p[0]); }
+  for(i=0;i<p[3];i++){ rc.push(i < p[2]); }
+  document.getElementById('pairBox').innerHTML =
+      '<div class="vs-wrap">'
+    +   '<div class="vs-item"><div class="shape-box">'+rectSVG(p[1], lc, true, 'mini')+'</div>'+pairFracHTML(p[0],p[1])+'</div>'
+    +   '<div class="vs-sym" id="sym3">○</div>'
+    +   '<div class="vs-item"><div class="shape-box">'+rectSVG(p[3], rc, true, 'mini')+'</div>'+pairFracHTML(p[2],p[3])+'</div>'
+    + '</div>';
+}
+function setCmpBtns3(on){
+  var btns = document.getElementById('cmpBtns').querySelectorAll('button');
+  for(var i=0;i<btns.length;i++){ btns[i].disabled = !on; }
+}
+function answer3(sym){
+  if(L.answered){ return; }
+  L.answered = true;
+  var p = PAIRS[L.mode][L.idx];
+  var lv = p[0]/p[1], rv = p[2]/p[3];
+  var right = lv < rv ? '<' : (lv > rv ? '>' : '=');
+  var ok = (sym === right);
+  document.getElementById('sym3').textContent = right;
+  var fb = document.getElementById('fb3');
+  var tip = (p[1] === p[3])
+    ? '分母相同，比分子：'+p[0]+' 和 '+p[2]+'，'+Math.max(p[0],p[2])+' 更大。'
+    : '分子都是 1，分的份数越少，每一份越大。';
+  fb.innerHTML = '<div class="fb '+(ok?'ok':'bad')+'">'
+    + (ok ? '🎉 答对啦！' : '💪 再想想，正确答案是 '+right+'。')
+    + ' '+F(p[0],p[1],34)+' '+right+' '+F(p[2],p[3],34)+'　'+tip + '</div>';
+  sfx(ok);
+  if(ok){ L.correct++; if(L.correct >= 2){ enableComplete(); } }
+  setCmpBtns3(false);
+  document.getElementById('nextPair').style.display = '';
+}
+function nextPair3(){
+  L.idx = (L.idx + 1) % PAIRS[L.mode].length;
+  L.answered = false;
+  document.getElementById('fb3').innerHTML = '';
+  document.getElementById('nextPair').style.display = 'none';
+  document.getElementById('sym3').textContent = '○';
+  setCmpBtns3(true);
+  renderPair3();
+}
+
+/* =====================================================
+   第 4 关：终极测验
+===================================================== */
+var Q = { i:0, score:0, answered:false };
+function startQuiz(){
+  Q = { i:0, score:0, answered:false };
+  showView('view-quiz');
+  renderQ();
+}
+function optHTML(o){
+  if(o.f){ return F(o.f[0], o.f[1], 40); }
+  return o.s;
+}
+function renderQ(){
+  Q.answered = false;
+  var item = QUIZ[Q.i];
+  document.getElementById('quizProg').textContent = '第 '+(Q.i+1)+' / '+QUIZ.length+' 题';
+  document.getElementById('quizScore').textContent = Q.score;
+  document.getElementById('quizFb').innerHTML = '';
+  document.getElementById('quizNext').style.display = 'none';
+
+  var body = '';
+  if(item.t === 'shape'){
+    var colored = []; for(var i=0;i<item.parts;i++){ colored.push(i < item.colored); }
+    body += '<div class="q-text">'+item.q+'</div>'
+          + '<div class="stage"><div class="shape-box">'+shapeSVG(item.shape, item.parts, colored, true)+'</div></div>';
+  }else if(item.t === 'cmp'){
+    var lc = [], rc = [], i;
+    for(i=0;i<item.l[1];i++){ lc.push(i < item.l[0]); }
+    for(i=0;i<item.r[1];i++){ rc.push(i < item.r[0]); }
+    body += '<div class="q-text">在 ○ 里填上正确的符号</div>'
+          + '<div class="vs-wrap">'
+          +   '<div class="vs-item"><div class="shape-box">'+rectSVG(item.l[1], lc, true, 'mini')+'</div>'+pairFracHTML(item.l[0],item.l[1])+'</div>'
+          +   '<div class="vs-sym">○</div>'
+          +   '<div class="vs-item"><div class="shape-box">'+rectSVG(item.r[1], rc, true, 'mini')+'</div>'+pairFracHTML(item.r[0],item.r[1])+'</div>'
+          + '</div>';
+  }else{
+    body += '<div class="q-text" style="padding:12px 6px">'+item.q+'</div>';
+  }
+
+  body += '<div class="opts">';
+  if(item.t === 'cmp'){
+    body += ['<','=','>'].map(function(s){
+      return '<button class="opt" data-v="'+s+'" onclick="answerCmp(\''+s+'\')">'+s+'</button>';
+    }).join('');
+  }else{
+    for(var j=0;j<item.opts.length;j++){
+      body += '<button class="opt" data-v="'+j+'" onclick="answerOpt('+j+')">'+optHTML(item.opts[j])+'</button>';
+    }
+  }
+  body += '</div>';
+  document.getElementById('quizBody').innerHTML = body;
+}
+function grade(ok, v){
+  Q.answered = true;
+  Q.score = Math.max(0, Q.score + (ok ? 10 : -5));
+  document.getElementById('quizScore').textContent = Q.score;
+  sfx(ok);
+  var item = QUIZ[Q.i];
+  document.getElementById('quizFb').innerHTML =
+      '<div class="fb '+(ok?'ok':'bad')+'" style="margin-top:16px">'
+    + (ok ? '🎉 答对啦！+10 分' : '💪 答错啦，−5 分') + '　' + item.ex + '</div>';
+  var nx = document.getElementById('quizNext');
+  nx.textContent = (Q.i === QUIZ.length-1) ? '看成绩 →' : '下一题 →';
+  nx.style.display = '';
+}
+function answerOpt(j){
+  if(Q.answered){ return; }
+  var item = QUIZ[Q.i], ok = (j === item.a);
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var v = parseInt(opts[k].getAttribute('data-v'),10);
+    if(v === item.a){ opts[k].classList.add('ok'); }
+    else if(v === j){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, j);
+}
+function answerCmp(s){
+  if(Q.answered){ return; }
+  var item = QUIZ[Q.i], ok = (s === item.a);
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var v = opts[k].getAttribute('data-v');
+    if(v === item.a){ opts[k].classList.add('ok'); }
+    else if(v === s){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, s);
+}
+function nextQ(){
+  Q.i++;
+  if(Q.i >= QUIZ.length){ finishQuiz(); } else { renderQ(); }
+}
+function finishQuiz(){
+  var sc = Q.score;
+  var st = sc >= 100 ? 3 : (sc >= 80 ? 2 : (sc >= 60 ? 1 : 0));
+  G.stars[4] = Math.max(G.stars[4], st);
+  G.best = Math.max(G.best, sc);
+  save();
+  document.getElementById('rScore').textContent = sc;
+  document.getElementById('rStars').innerHTML = starStr(st, 3);
+  var msg;
+  if(sc >= 100){ msg = '满分！你就是分数小达人！🏆'; }
+  else if(sc >= 80){ msg = '太棒了！差一点点就满分，再挑战一次？'; }
+  else if(sc >= 60){ msg = '很不错！回到关卡里再看看图，下次更高分！'; }
+  else{ msg = '没关系，回到前两关再玩一玩，分数会进步的！'; }
+  document.getElementById('rMsg').textContent = msg + '（历史最高分：'+G.best+' 分）';
+  showView('view-result');
+  if(st > 0){ sfx(true); }
+}
+
+/* =====================================================
+   启动
+===================================================== */
+load();
+document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+renderHome();
+showView('view-home');
+</script>
+</body>
+</html>

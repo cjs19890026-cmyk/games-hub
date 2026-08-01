@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学习乐园 · Learning Hub</title>
+<style>
+  :root{
+    --ink:#333333;      /* 正文黑字 */
+    --title:#111111;    /* 标题黑 */
+    --en:#2c3e9b;       /* EN 蓝 */
+    --zh:#c44569;       /* ZH 粉 */
+    --badge:#4a5fcf;    /* 角标蓝紫 */
+    --card:#ffffff;     /* 卡片白 */
+    --line:#d8d8d8;     /* 边框灰 */
+    --line-dark:#999999;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:#ffffff;
+    color:var(--ink);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 60px;}
+
+  /* ===== 头部 ===== */
+  header{text-align:center;padding:28px 0 24px;}
+  h1{
+    font-size:42px;color:var(--zh);font-weight:800;letter-spacing:2px;
+  }
+  .en-title{
+    font-size:20px;color:var(--en);font-weight:600;letter-spacing:3px;margin-top:6px;
+  }
+  .sub{
+    margin-top:10px;font-size:15px;color:var(--ink);
+  }
+
+  /* ===== Tab 栏 ===== */
+  .tabs{
+    display:flex;justify-content:center;gap:12px;margin:20px 0 28px;
+  }
+  .tab{
+    background:#ffffff;color:var(--ink);border:2px solid var(--line);
+    font-size:18px;font-weight:700;padding:12px 34px;border-radius:12px;
+    cursor:pointer;transition:border-color .15s, color .15s;user-select:none;
+  }
+  .tab:active{transform:scale(.97);}
+  .tab.on{
+    border-color:var(--en);color:var(--en);
+    box-shadow:inset 0 -4px 0 var(--en);
+  }
+  .tab small{display:block;font-size:12px;font-weight:500;color:var(--ink);opacity:.75;letter-spacing:1px;}
+
+  /* ===== 游戏卡片 ===== */
+  .panel{display:none;}
+  .panel.on{display:block;}
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;
+  }
+  .card{
+    background:var(--card);border:2px solid var(--line);border-radius:16px;
+    padding:24px 22px;text-decoration:none;color:var(--ink);
+    display:flex;flex-direction:column;gap:10px;
+    transition:border-color .15s, transform .15s;
+  }
+  .card:hover{border-color:var(--en);transform:translateY(-3px);}
+  .card:active{transform:translateY(0);}
+  .card .icon{font-size:44px;line-height:1;}
+  .card .name{font-size:22px;font-weight:800;color:var(--title);}
+  .card .name-en{font-size:14px;font-weight:600;color:var(--en);letter-spacing:.5px;}
+  .card .desc{font-size:14px;line-height:1.6;color:var(--ink);}
+  .card .meta{
+    display:flex;gap:8px;margin-top:auto;flex-wrap:wrap;
+  }
+  .badge{
+    background:var(--badge);color:#ffffff;font-size:12px;font-weight:600;
+    padding:4px 12px;border-radius:999px;letter-spacing:.5px;
+  }
+  .badge.zh{background:var(--zh);}
+  .badge.en{background:var(--en);}
+
+  /* ===== 空态（敬请期待）===== */
+  .empty{
+    background:var(--card);border:2px dashed var(--line-dark);border-radius:16px;
+    text-align:center;padding:60px 20px;color:var(--ink);
+  }
+  .empty .icon{font-size:52px;}
+  .empty .t1{font-size:20px;font-weight:800;margin-top:12px;color:var(--title);}
+  .empty .t2{font-size:14px;color:var(--en);margin-top:4px;letter-spacing:2px;}
+
+  footer{text-align:center;margin-top:44px;font-size:13px;color:var(--ink);opacity:.7;}
+
+  /* ===== 响应式 ===== */
+  @media (max-width:600px){
+    h1{font-size:30px;}
+    .en-title{font-size:15px;}
+    .tab{font-size:16px;padding:10px 20px;flex:1;}
+    .tabs{gap:8px;}
+    .grid{grid-template-columns:1fr;}
+    .wrap{padding:20px 14px 40px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>学习乐园</h1>
+    <div class="en-title">LEARNING HUB</div>
+    <div class="sub">三年级数学 · 英语 · 语文 互动学习游戏</div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-panel="math">数学<small>MATH</small></button>
+    <button class="tab" data-panel="english">英语<small>ENGLISH</small></button>
+    <button class="tab" data-panel="chinese">语文<small>CHINESE</small></button>
+  </nav>
+
+  <!-- ===== 数学 ===== -->
+  <section class="panel on" id="panel-math">
+    <div class="grid">
+      <a class="card" href="math/fraction-adventure.html" target="_blank" rel="noopener">
+        <div class="icon">🍕</div>
+        <div class="name">分数大冒险</div>
+        <div class="name-en">FRACTION ADVENTURE</div>
+        <div class="desc">切蛋糕学分数：几分之一、几分之几、比较大小，动画演示 + 闯关练习。</div>
+        <div class="meta">
+          <span class="badge">三年级上</span>
+          <span class="badge zh">数学</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ===== 英语 ===== -->
+  <section class="panel" id="panel-english">
+    <div class="grid">
+      <a class="card" href="english/word-match.html" target="_blank" rel="noopener">
+        <div class="icon">🔤</div>
+        <div class="name">单词消消乐</div>
+        <div class="name-en">WORD MATCH</div>
+        <div class="desc">三年级英语词汇连连看，46 个单元词库，限时挑战 + 计分。</div>
+        <div class="meta">
+          <span class="badge">三年级全册</span>
+          <span class="badge en">英语</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ===== 语文 ===== -->
+  <section class="panel" id="panel-chinese">
+    <div class="empty">
+      <div class="icon">📚</div>
+      <div class="t1">语文游戏筹备中</div>
+      <div class="t2">COMING SOON</div>
+    </div>
+  </section>
+
+  <footer>Made for Chen Nuo · 学习乐园</footer>
+</div>
+
+<script>
+(function(){
+  var tabs = document.querySelectorAll('.tab');
+  var panels = {
+    math: document.getElementById('panel-math'),
+    english: document.getElementById('panel-english'),
+    chinese: document.getElementById('panel-chinese')
+  };
+  function show(name){
+    for (var i = 0; i < tabs.length; i++){
+      var on = tabs[i].getAttribute('data-panel') === name;
+      tabs[i].classList.toggle('on', on);
+    }
+    for (var key in panels){
+      panels[key].classList.toggle('on', key === name);
+    }
+  }
+  for (var i = 0; i < tabs.length; i++){
+    tabs[i].addEventListener('click', function(){
+      show(this.getAttribute('data-panel'));
+    });
+  }
+})();
+</script>
+</body>
+</html>
