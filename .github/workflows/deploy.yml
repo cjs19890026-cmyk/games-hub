@@ -20,10 +20,11 @@ jobs:
       - name: 安装 CloudBase CLI
         run: npm install -g @cloudbase/cli
 
-      - name: 部署静态网站到 CloudBase
+      - name: 登录 CloudBase
         env:
           TCB_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
           TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
-          TENCENTCLOUD_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
-          TENCENTCLOUD_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
+        run: tcb login --apiKeyId "$TCB_SECRET_ID" --apiKey "$TCB_SECRET_KEY"
+
+      - name: 部署静态网站到 CloudBase
         run: tcb hosting deploy ./ /game -e cnuocnuo0026-d6gmy0w5ja740e8e5
