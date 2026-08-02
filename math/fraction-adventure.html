@@ -17,25 +17,59 @@
     --bad:#d64550;      /* 答错红 */
     --card:#ffffff;     /* 控件白底 */
     --page:#fdfbf7;     /* 页面底色（纯色，非控件） */
+
+    /* 糖果卡通色板 */
+    --pink:#ff8fb2;   --pink-soft:#ffe3ec;
+    --orange:#ff9f5a; --orange-soft:#ffe7d1;
+    --green:#45c486;  --green-soft:#d9f5e7;
+    --purple:#8f7bf0; --purple-soft:#e6e0fd;
+    --blue:#4f9dff;   --blue-soft:#dcebff;
+    --lemon:#ffd54f;  --lemon-soft:#fff3c9;
+    --aqua:#43d4e6;
+    --btn-shadow:#ffc6d8;    /* 按钮糖果粉投影 */
+    --btn-shadow-blue:#b9d0ff;
+    --card-shadow:#e6dfd2;   /* 通用卡片投影 */
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; }
   body{
+    min-height:100vh;
     background:
-      radial-gradient(#e9e2d1 1.4px, transparent 1.4px) 0 0 / 26px 26px,
-      var(--page);
+      radial-gradient(#ffffff 1.6px, transparent 1.6px) 0 0 / 26px 26px,
+      linear-gradient(180deg,#7ecdf6 0%,#b4e6fb 38%,#e9f8ff 62%,#fff3d6 100%);
     color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
     font-size:20px; line-height:1.6;
   }
-  body::before{
-    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
-    background:
-      radial-gradient(760px 520px at 92% -8%,  rgba(44,63,155,.10), transparent 62%),
-      radial-gradient(680px 460px at -4% 104%, rgba(196,69,105,.09), transparent 62%),
-      radial-gradient(560px 420px at 55% 118%, rgba(245,179,1,.12), transparent 60%);
-  }
+  :focus-visible{ outline:3px solid var(--blue); outline-offset:3px; }
   .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 64px; position:relative; z-index:1; }
+
+  /* ---------- 卡通天空背景装饰（纯装饰，不参与交互） ---------- */
+  .bg-deco{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .bg-deco span{ position:absolute; display:block; line-height:1; user-select:none; }
+  .d-sun{ top:22px; left:3%; font-size:86px; filter:drop-shadow(0 8px 12px rgba(255,175,40,.45)); animation:sunPulse 6s ease-in-out infinite; }
+  .d-cloud{ font-size:96px; opacity:.92; filter:drop-shadow(0 8px 12px rgba(70,140,190,.25)); animation:sway 9s ease-in-out infinite; }
+  .c1{ top:52px; right:6%; }
+  .c2{ top:225px; left:4%; font-size:64px; opacity:.85; animation-delay:1.2s; }
+  .c3{ top:46%; right:3%; font-size:58px; opacity:.8; animation-delay:2.3s; }
+  .d-rainbow{ top:205px; right:11%; font-size:78px; transform:rotate(16deg); animation:bob 6s ease-in-out infinite; }
+  .d-balloon{ font-size:52px; animation:bob 4.6s ease-in-out infinite; filter:drop-shadow(0 6px 8px rgba(0,0,0,.14)); }
+  .b1{ top:36%; left:2%; animation-delay:.5s; }
+  .b2{ top:56%; right:5%; font-size:42px; animation-delay:1.3s; }
+  .d-star{ font-size:34px; animation:twinkle 3s ease-in-out infinite; }
+  .s1{ top:31%; right:17%; animation-delay:.4s; }
+  .s2{ top:52%; left:11%; font-size:26px; animation-delay:1s; }
+  .s3{ top:17%; left:40%; font-size:24px; animation-delay:1.7s; }
+  .d-cake{ bottom:24px; left:5%; font-size:64px; animation:bob 5s ease-in-out infinite; }
+  .d-hill{ position:absolute; bottom:-70px; left:-6%; width:62%; height:230px; background:linear-gradient(180deg,#7ce0b8,#4fc58e); border-radius:50% 50% 0 0 / 100% 100% 0 0; opacity:.5; }
+  .h2{ left:44%; width:70%; height:270px; background:linear-gradient(180deg,#9be8c8,#64d6a2); opacity:.38; }
+
+  @keyframes sunPulse{ 0%,100%{ transform:scale(1) rotate(0deg);} 50%{ transform:scale(1.07) rotate(5deg);} }
+  @keyframes sway{ 0%,100%{ transform:translateX(-12px);} 50%{ transform:translateX(12px);} }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-15px) rotate(2deg);} }
+  @keyframes twinkle{ 0%,100%{ opacity:.45; transform:scale(.9);} 50%{ opacity:1; transform:scale(1.18);} }
+  @keyframes confFall{ 0%{ transform:translateY(-40px) rotate(0deg); opacity:1;} 100%{ transform:translateY(600px) rotate(300deg); opacity:.1; } }
+  @keyframes cardIn{ 0%{ opacity:0; transform:translateY(16px) scale(.97);} 100%{ opacity:1; transform:none; } }
 
   /* ---------- 通用控件（全部白底黑字，不透明） ---------- */
   .btn{
@@ -43,60 +77,90 @@
     border:3px solid var(--ink); border-radius:18px;
     padding:18px 28px; font-size:26px; font-weight:700;
     cursor:pointer; user-select:none; touch-action:manipulation;
-    box-shadow:0 4px 0 #dcd6c9;
+    box-shadow:0 5px 0 var(--btn-shadow);
+    transition:transform .12s, box-shadow .12s, background-color .15s, color .15s;
   }
-  .btn:active{ transform:translateY(3px); box-shadow:0 1px 0 #dcd6c9; }
-  .btn:disabled{ background:#eeeeee; color:#999999; border-color:#bbbbbb; box-shadow:none; cursor:not-allowed; }
-  .btn.primary{ border-color:var(--en); }
-  .btn.small{ font-size:20px; padding:10px 18px; border-radius:14px; }
+  .btn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .btn:disabled{ background:#eeeeee; color:#999999; border-color:#bbbbbb; box-shadow:0 4px 0 #dddddd; cursor:not-allowed; }
+  .btn.primary{ border-color:var(--en); color:var(--en); box-shadow:0 5px 0 var(--btn-shadow-blue); }
+  .btn.primary:hover:not(:disabled){ box-shadow:0 7px 0 var(--btn-shadow-blue); }
+  .btn.primary:active{ box-shadow:0 1px 0 var(--btn-shadow-blue); }
+  .btn.small{ font-size:20px; padding:10px 18px; border-radius:14px; box-shadow:0 4px 0 var(--btn-shadow); }
+  .btn.small:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--btn-shadow); }
 
   .card{
     background:var(--card); border:3px solid var(--ink);
-    border-radius:22px; padding:22px; box-shadow:0 5px 0 #dcd6c9;
+    border-radius:22px; padding:22px; box-shadow:0 5px 0 var(--card-shadow);
   }
 
   .en{ color:var(--en); }
   .zh{ color:var(--zh); }
 
   /* ---------- 首页 ---------- */
-  .home-title{ font-size:52px; font-weight:900; color:var(--title); margin:18px 0 4px; text-align:center; }
+  .home-title{ font-size:54px; font-weight:900; color:var(--title); margin:14px 0 4px; text-align:center; letter-spacing:2px; text-wrap:balance; }
+  .home-title .t-emoji{ display:inline-block; font-size:.68em; vertical-align:middle; animation:bob 4s ease-in-out infinite; }
+  .home-title .t-emoji.e2{ animation-delay:1.1s; }
+  .home-under{ display:block; width:min(340px,72%); height:14px; margin:10px auto 8px; }
   .home-sub{ font-size:24px; color:var(--title); text-align:center; margin:0 0 8px; font-weight:700; }
   .home-tip{ text-align:center; margin:0 0 26px; }
-  .map{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; }
-  .level-card{ text-align:center; cursor:pointer; transition:transform .12s; }
-  .level-card:active{ transform:scale(.97); }
-  .level-card .icon{ font-size:56px; line-height:1.2; }
+  .map{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
+  .level-card{ text-align:center; cursor:pointer; border-color:var(--lv); box-shadow:0 6px 0 var(--lv-shadow); animation:cardIn .45s both; transition:transform .15s, box-shadow .15s; }
+  .level-card:nth-child(2){ animation-delay:.06s; }
+  .level-card:nth-child(3){ animation-delay:.12s; }
+  .level-card:nth-child(4){ animation-delay:.18s; }
+  .level-card:hover{ transform:translateY(-4px); box-shadow:0 10px 0 var(--lv-shadow); }
+  .level-card:hover .icon{ transform:rotate(-8deg) scale(1.08); }
+  .level-card:active{ transform:translateY(0); box-shadow:0 2px 0 var(--lv-shadow); }
+  .lv1{ --lv:var(--pink);   --lv-shadow:#ffc9d9; }
+  .lv2{ --lv:var(--orange); --lv-shadow:#ffd4ad; }
+  .lv3{ --lv:var(--green);  --lv-shadow:#bcead3; }
+  .lv4{ --lv:var(--purple); --lv-shadow:#cfc5f8; }
+  .level-card .icon{
+    width:86px; height:86px; margin:0 auto 6px; font-size:48px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--pink-soft); border:3px solid var(--lv); border-radius:24px;
+    box-shadow:inset 0 -5px 0 rgba(0,0,0,.05); transition:transform .18s;
+  }
+  .lv1 .icon{ background:var(--pink-soft); }
+  .lv2 .icon{ background:var(--orange-soft); }
+  .lv3 .icon{ background:var(--green-soft); }
+  .lv4 .icon{ background:var(--purple-soft); }
   .level-card .lv-zh{ font-size:30px; font-weight:900; color:var(--zh); margin-top:6px; }
   .level-card .lv-en{ font-size:18px; font-weight:700; color:var(--en); letter-spacing:.5px; }
   .level-card .lv-desc{ font-size:18px; color:var(--ink); margin-top:8px; }
   .level-card .stars{ font-size:30px; margin-top:10px; letter-spacing:4px; }
-  .level-card.locked{ background:#f0f0f0; border-color:#aaaaaa; cursor:not-allowed; }
+  .level-card.locked{ background:#f0f0f0; border-color:#aaaaaa; box-shadow:0 5px 0 #dddddd; cursor:not-allowed; animation:none; }
+  .level-card.locked .icon{ background:#e6e6e6; border-color:#aaaaaa; filter:grayscale(1); }
   .level-card.locked .lv-zh,.level-card.locked .lv-desc{ color:#888888; }
   .home-foot{ text-align:center; margin-top:30px; }
 
   /* ---------- 关卡页 ---------- */
   .bar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
   .bar h2{ font-size:36px; font-weight:900; color:var(--title); margin:0; }
-  .chip{ display:inline-block; font-size:16px; font-weight:800; padding:4px 12px; border:2px solid currentColor; border-radius:999px; vertical-align:middle; }
+  .chip{ display:inline-block; font-size:16px; font-weight:800; padding:4px 14px; border:none; border-radius:999px; vertical-align:middle; color:#fff; letter-spacing:.5px; }
+  .chip.en{ background:var(--en); }
+  .chip.zh{ background:var(--zh); }
 
   .tip-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; margin:14px 0 22px; }
   .script-card{
     background:var(--card); border:3px solid var(--ink); border-left:14px solid var(--zh);
-    border-radius:16px; padding:16px 20px; width:100%; box-shadow:0 4px 0 #dcd6c9;
+    border-radius:16px; padding:16px 20px; width:100%; box-shadow:0 5px 0 #ffd2e0;
   }
   .script-card .tag{ font-weight:900; font-size:18px; margin-bottom:6px; }
   .script-card p{ margin:0; font-size:22px; text-align:center; }
 
   .hint{ font-size:20px; font-weight:700; margin:6px 0 14px; text-align:center; }
   .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:center; margin-bottom:16px; }
-  .tog.on{ background:#eef1fb; border-color:var(--en); }
+  .tog.on{ background:#eef1fb; border-color:var(--en); color:var(--en); box-shadow:0 5px 0 var(--btn-shadow-blue); }
+  .tog.on:active{ box-shadow:0 1px 0 var(--btn-shadow-blue); }
 
   .stage{ display:flex; gap:28px; flex-wrap:wrap; align-items:center; justify-content:center; margin:8px 0 18px; }
-  .shape-box{ background:var(--card); border:3px solid var(--ink); border-radius:22px; padding:18px; box-shadow:0 5px 0 #dcd6c9; }
+  .shape-box{ background:var(--card); border:3px solid var(--blue); border-radius:22px; padding:18px; box-shadow:0 5px 0 #cfe6fb; }
   .shape-svg{ display:block; width:min(400px,78vw); height:auto; }
   .shape-svg.wide{ width:min(560px,84vw); }
   .shape-svg.mini{ width:min(300px,60vw); }
-  .slice{ fill:var(--hl); fill-opacity:0; transition:fill-opacity .45s; pointer-events:none; }
+  .slice{ fill:var(--hl); fill-opacity:0; transition:fill-opacity .45s; pointer-events:none; stroke:#ffffff; stroke-width:3; stroke-linejoin:round; }
   .slice.on{ fill-opacity:1; }
   svg.ready .slice{ pointer-events:auto; cursor:pointer; }
   .dline{ stroke:var(--line); stroke-width:3; stroke-linecap:round; }
@@ -124,26 +188,35 @@
   .quiz-head .stat{ font-size:22px; font-weight:800; }
   .opts{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:18px auto 0; max-width:760px; }
   .opt{ background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:18px;
-        padding:20px 12px; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #dcd6c9;
+        padding:20px 12px; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 5px 0 var(--btn-shadow);
         display:flex; align-items:center; justify-content:center; min-height:86px; user-select:none;
-        flex:1 1 160px; max-width:240px; }
-  .opt:active{ transform:translateY(3px); box-shadow:0 1px 0 #dcd6c9; }
+        flex:1 1 160px; max-width:240px; transition:transform .12s, box-shadow .12s; }
+  .opt:hover:not(.ok):not(.bad){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .opt:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
   .opt.ok{ background:#e7f6ec; border-color:var(--ok); }
   .opt.bad{ background:#fdecea; border-color:var(--bad); }
   .q-text{ font-size:30px; font-weight:900; color:var(--title); margin:8px 0 4px; text-align:center; }
 
   /* ---------- 结果页 ---------- */
-  .result{ text-align:center; padding-top:24px; }
+  .result{ text-align:center; padding-top:24px; position:relative; }
   .result .big-score{ font-size:88px; font-weight:900; color:var(--title); line-height:1.1; }
+  @supports ((-webkit-background-clip:text) or (background-clip:text)){
+    .result .big-score{
+      background:linear-gradient(90deg,var(--en),var(--purple),var(--zh),var(--orange));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+  }
   .result .big-stars{ font-size:64px; letter-spacing:8px; margin:10px 0; }
   .result .msg{ font-size:28px; font-weight:800; margin:12px 0 26px; }
+  #confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  #confetti span{ position:absolute; top:-40px; animation:confFall linear both; }
 
   .footer-actions{ text-align:center; margin-top:26px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
 
   #toast{
     position:fixed; left:50%; bottom:40px; transform:translateX(-50%);
-    background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:16px;
-    padding:14px 26px; font-size:22px; font-weight:800; box-shadow:0 5px 0 #dcd6c9;
+    background:var(--card); color:var(--ink); border:3px solid var(--zh); border-radius:16px;
+    padding:14px 26px; font-size:22px; font-weight:800; box-shadow:0 5px 0 var(--btn-shadow);
     display:none; z-index:99;
   }
   #muteBtn{ position:fixed; top:14px; right:14px; z-index:99; }
@@ -155,16 +228,42 @@
     .home-title{ font-size:40px; }
     .btn{ font-size:22px; padding:16px 20px; }
     .q-text{ font-size:26px; }
+    .d-rainbow,.d-balloon,.d-star,.d-cake,.d-hill{ display:none; }
+    .d-sun{ font-size:56px; top:10px; }
+    .d-cloud{ font-size:56px; }
   }
 </style>
 </head>
 <body>
+<div class="bg-deco" aria-hidden="true">
+  <span class="d-sun">☀️</span>
+  <span class="d-cloud c1">☁️</span>
+  <span class="d-cloud c2">☁️</span>
+  <span class="d-cloud c3">☁️</span>
+  <span class="d-rainbow">🌈</span>
+  <span class="d-balloon b1">🎈</span>
+  <span class="d-balloon b2">🎈</span>
+  <span class="d-star s1">⭐</span>
+  <span class="d-star s2">✨</span>
+  <span class="d-star s3">🌟</span>
+  <span class="d-cake">🧁</span>
+  <span class="d-hill h1"></span>
+  <span class="d-hill h2"></span>
+</div>
 <button id="muteBtn" class="btn small" onclick="toggleMute()">🔊</button>
 <div id="toast"></div>
 
 <!-- ================= 首页：关卡地图 ================= -->
 <div id="view-home" class="wrap">
-  <h1 class="home-title">分数大冒险</h1>
+  <h1 class="home-title"><span class="t-emoji">🍰</span> 分数大冒险 <span class="t-emoji e2">🌈</span></h1>
+  <svg class="home-under" viewBox="0 0 340 14" aria-hidden="true">
+    <defs>
+      <linearGradient id="underGrad" x1="0" x2="1">
+        <stop offset="0" stop-color="#4f9dff"/><stop offset=".5" stop-color="#ff8fb2"/><stop offset="1" stop-color="#ffd54f"/>
+      </linearGradient>
+    </defs>
+    <path d="M6 9 C 40 2, 70 12, 105 8 S 175 3, 215 9 S 290 3, 334 7" fill="none" stroke="url(#underGrad)" stroke-width="6" stroke-linecap="round"/>
+  </svg>
   <p class="home-sub">My First Fractions · 分数的初步认识</p>
   <p class="home-tip"><span class="chip en">Teaching Tips</span> <span class="chip zh">教学提示</span></p>
   <div class="tip-wrap" style="margin-top:0">
@@ -230,6 +329,7 @@
 <!-- ================= 结果页 ================= -->
 <div id="view-result" class="wrap" style="display:none">
   <div class="result card">
+    <div id="confetti" aria-hidden="true"></div>
     <h2 style="font-size:38px;color:var(--title);margin:0">挑战结束！</h2>
     <div class="big-stars" id="rStars"></div>
     <div class="big-score"><span id="rScore">0</span> 分</div>
@@ -319,6 +419,7 @@ function starStr(n, total){
   for(var i=0;i<total;i++){ s += i<n ? '<span style="color:var(--star)">★</span>' : '<span style="color:#c9c2b2">☆</span>'; }
   return s;
 }
+var CANDY = ['#ff8fb2','#ffd54f','#5fd7a3','#7fb2ff','#c78aff','#ff9f5a','#4dd0e1'];
 function slicePath(cx, cy, r, i, n){
   var a0 = -Math.PI/2 + i*2*Math.PI/n;
   var a1 = -Math.PI/2 + (i+1)*2*Math.PI/n;
@@ -333,7 +434,7 @@ function circleSVG(parts, coloredArr, staticMode, extraClass){
   var r = 90, c = 100, i, s = '';
   for(i=0;i<parts;i++){
     var on = coloredArr && coloredArr[i] ? ' on' : '';
-    s += '<path class="slice'+on+'" data-i="'+i+'" d="'+slicePath(c,c,r,i,parts)+'"></path>';
+    s += '<path class="slice'+on+'" data-i="'+i+'" fill="'+CANDY[i%CANDY.length]+'" d="'+slicePath(c,c,r,i,parts)+'"></path>';
   }
   s += '<circle class="outline" cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none"></circle>';
   for(i=0;i<parts;i++){
@@ -348,7 +449,7 @@ function rectSVG(parts, coloredArr, staticMode, extraClass){
   var W = 360, H = 120, i, s = '', w = W/parts;
   for(i=0;i<parts;i++){
     var on = coloredArr && coloredArr[i] ? ' on' : '';
-    s += '<rect class="slice'+on+'" data-i="'+i+'" x="'+(i*w).toFixed(2)+'" y="0" width="'+w.toFixed(2)+'" height="'+H+'"></rect>';
+    s += '<rect class="slice'+on+'" data-i="'+i+'" fill="'+CANDY[i%CANDY.length]+'" x="'+(i*w).toFixed(2)+'" y="0" width="'+w.toFixed(2)+'" height="'+H+'"></rect>';
   }
   s += '<rect class="outline" x="0" y="0" width="'+W+'" height="'+H+'" fill="none" rx="6"></rect>';
   for(i=1;i<parts;i++){
@@ -417,7 +518,7 @@ function renderHome(){
   var html = '';
   for(var i=0;i<LEVELS.length;i++){
     var lv = LEVELS[i], locked = lv.id > G.unlocked;
-    html += '<div class="card level-card'+(locked?' locked':'')+'" '+(locked?'':'onclick="openLevel('+lv.id+')"')+'>'
+    html += '<div class="card level-card lv'+lv.id+(locked?' locked':'')+'" '+(locked?'':'onclick="openLevel('+lv.id+')"')+'>'
           +   '<div class="icon">'+(locked?'🔒':lv.icon)+'</div>'
           +   '<div class="lv-zh">第 '+lv.id+' 关 · '+lv.zh+'</div>'
           +   '<div class="lv-en">'+lv.en+'</div>'
@@ -764,6 +865,15 @@ function finishQuiz(){
   else if(sc >= 60){ msg = '很不错！回到关卡里再看看图，下次更高分！'; }
   else{ msg = '没关系，回到前两关再玩一玩，分数会进步的！'; }
   document.getElementById('rMsg').textContent = msg + '（历史最高分：'+G.best+' 分）';
+  var conf = document.getElementById('confetti');
+  var emos = ['🎉','🎊','⭐','✨','🌈','💖','🧁','🎈'];
+  var ch = '';
+  for(var ci=0; ci<16; ci++){
+    ch += '<span style="left:'+(6+Math.random()*88).toFixed(1)+'%;font-size:'+(20+Math.random()*26).toFixed(1)+'px;'
+        + 'animation-duration:'+(2.2+Math.random()*2.2).toFixed(2)+'s;animation-delay:'+(Math.random()*0.8).toFixed(2)+'s">'
+        + emos[ci%emos.length]+'</span>';
+  }
+  conf.innerHTML = ch;
   showView('view-result');
   if(st > 0){ sfx(true); }
 }

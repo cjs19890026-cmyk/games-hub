@@ -39,6 +39,77 @@ games-hub/
 - 高对比度适配课堂大屏；适配手机 / 平板 / Windows / Mac 多平台
 - 计分规则参考：答对 +10，答错 −5，限时 +2/秒；倒计时 60 秒，最后 10 秒红色闪烁
 
+## UI 统一规范（2026-08 沉淀，新游戏照此实现）
+
+所有色值写进 `:root` 变量，禁止散落硬编码。**糖果天空版参考实现：`math/fraction-adventure.html`**；`index.html` 导航首页仍为旧奶油底，后续改版时照此升级。
+
+```css
+:root{
+  --ink:#333333;      /* 正文黑字 */
+  --title:#111111;    /* 标题黑 */
+  --en:#2c3e9b;       /* EN 蓝 / 数学 */
+  --zh:#c44569;       /* ZH 粉 / 语文 */
+  --badge:#4a5fcf;    /* 角标蓝紫 */
+  --gold:#f5b301;     /* 星星金 */
+  --ok:#2e9e5b;       /* 答对绿 / 英语 */
+  --bad:#d64550;      /* 答错红 */
+  --card:#ffffff;     /* 卡片白 */
+  --page:#fdfbf7;     /* 备用页底（非控件） */
+
+  /* 糖果卡通色板 */
+  --pink:#ff8fb2;   --pink-soft:#ffe3ec;
+  --orange:#ff9f5a; --orange-soft:#ffe7d1;
+  --green:#45c486;  --green-soft:#d9f5e7;
+  --purple:#8f7bf0; --purple-soft:#e6e0fd;
+  --blue:#4f9dff;   --blue-soft:#dcebff;
+  --lemon:#ffd54f;  --lemon-soft:#fff3c9;
+  --aqua:#43d4e6;
+  --btn-shadow:#ffc6d8;     /* 按钮糖果粉投影 */
+  --btn-shadow-blue:#b9d0ff;
+  --card-shadow:#e6dfd2;    /* 通用卡片投影 */
+}
+```
+
+科目色：数学 = 蓝 `--en`（浅底 `#eef1fb`）、英语 = 绿 `--ok`（浅底 `#e7f6ec`）、语文 = 粉 `--zh`（浅底 `#fdecea`）。需要多色彩时优先取糖果色板，禁止凭空发明新色相。
+
+### 组件配方（糖果卡通主题）
+
+- 按钮/选项：白底、`3px` 黑描边、`18px` 圆角、糖果粉硬投影 `0 5px 0 var(--btn-shadow)`；hover 上浮 `translateY(-2px)` + 投影加深为 `0 7px 0`，按下 `translateY(4px)` + 投影缩为 `0 1px 0`；主按钮 `border-color:var(--en)` + 蓝色投影 `var(--btn-shadow-blue)`
+- 卡片/形状盒：白底、`3px` 描边、`22px` 圆角、投影 `0 5px 0 var(--card-shadow)`；**关卡/主题卡片用彩色描边 + 彩色投影**（粉/橙/绿/紫四色，类名 `lv1`–`lv4`），hover 抬升 `translateY(-4px)` + 投影加深
+- Tab / 主题按钮：药丸形 `border-radius:999px`
+- emoji 贴纸格：约 86px 方块、24px 圆角、科目色描边 + 浅色底，hover 轻微旋转放大
+- 角标 chip：胶囊形 `border-radius:999px`、实心底白字（EN 用 `--en` 蓝、ZH 用 `--zh` 粉）
+- 分数图形切片：糖果彩虹色轮换填充（`#ff8fb2 → #ffd54f → #5fd7a3 → #7fb2ff → #c78aff → #ff9f5a → #4dd0e1`）、`stroke:#fff` 白边分隔、`fill-opacity` 渐显涂色
+
+### 布局规则
+
+- 游戏区对称居中：按钮行、图形区、选项、提示文字、答题反馈全部居中；选项用 `flex` + `max-width:760px`，桌面 3 列居中、手机自动换行
+- 大字重（700–900）+ `clamp()` 流式字号，适配手机到课堂投影仪
+- 间距节奏：gap 14–18px、卡片 padding 22–28px、区块间隔 22–26px
+
+### 背景配方（糖果天空）
+
+- 页底：白色圆点纹理 + 蓝天到暖色渐变：
+  `radial-gradient(#ffffff 1.6px, transparent 1.6px) 0 0 / 26px 26px, linear-gradient(180deg,#7ecdf6 0%,#b4e6fb 38%,#e9f8ff 62%,#fff3d6 100%)`
+- 卡通装饰层：`<div class="bg-deco" aria-hidden="true">`（fixed、`inset:0`、`pointer-events:none`、`overflow:hidden`），放 emoji 太阳 ☀️、白云 ☁️、彩虹 🌈、气球 🎈、星星 ⭐/✨/🌟、纸杯蛋糕 🧁，以及两个绿色小山丘（`border-radius:50% 50% 0 0` 渐变块）
+- 装饰动效：太阳 `sunPulse`、云朵左右摇摆 `sway`、气球/彩虹/蛋糕上下浮动 `bob`、星星闪烁 `twinkle`，全部只用 `transform/opacity`（性能友好）
+- 手机端（`max-width:640px`）：隐藏彩虹、气球、星星、蛋糕、山丘，太阳和云朵缩小，避免遮挡内容
+- 内容容器 `.wrap{ position:relative; z-index:1 }` 盖在装饰层上方；装饰不与硬规则冲突：控件始终纯白不透明
+
+### 状态与交互
+
+- 主题切换：`html[data-theme]` + CSS 变量换肤；head 内提前读 `localStorage` 防刷新闪白；默认卡通
+- 教学提示组件：`.tip-wrap`（居中按钮 + 卡片）、按钮带 `aria-expanded`、卡片默认 `display:none`、展开时 pop 动效
+- 无障碍三件套：`:focus-visible` 描边（`3px solid var(--blue)`）、`prefers-reduced-motion` 关闭动画、Tab 用 `aria-selected`
+- 结果页庆祝：大分数用彩虹渐变字（`background-clip:text`，用 `@supports` 兜底纯黑）、`#confetti` 彩带 emoji 随机落下（`confFall`）
+- 卡片入场：`cardIn` 上浮渐显，`nth-child` 依次延迟，让页面有节奏感
+
+### 受保护契约（改版时不动）
+
+- 页面链接、文案、Tab 标签、关卡/计分逻辑
+- 单 HTML 离线可用，不引 CDN / 外部字体，用系统字体栈
+- 推送 main 分支由用户单独指令执行
+
 ## 开发约定
 
 - 所有游戏为独立静态 HTML，互不依赖
