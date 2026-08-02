@@ -3,7 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>学习乐园 · Learning Hub</title>
+<title>跟着课本玩游戏 · Learning Hub</title>
+<script>
+/* 先于绘制应用主题:默认卡通 */
+(function(){
+  try{
+    var t = localStorage.getItem('gh-theme');
+    document.documentElement.dataset.theme = (t === 'clean') ? 'clean' : 'cartoon';
+  }catch(e){
+    document.documentElement.dataset.theme = 'cartoon';
+  }
+})();
+</script>
 <style>
   :root{
     --ink:#333333;      /* 正文黑字 */
@@ -11,155 +22,289 @@
     --en:#2c3e9b;       /* EN 蓝 */
     --zh:#c44569;       /* ZH 粉 */
     --badge:#4a5fcf;    /* 角标蓝紫 */
+    --gold:#f5b301;     /* 星星金 */
+    --ok:#2e9e5b;       /* 答对绿 */
+    --bad:#d64550;      /* 答错红 */
     --card:#ffffff;     /* 卡片白 */
-    --line:#d8d8d8;     /* 边框灰 */
-    --line-dark:#999999;
+    --shadow-color:#dcd6c9; /* 贴纸硬投影 */
   }
+
+  /* ===== 主题:卡通(默认) ===== */
+  :root,
+  html[data-theme="cartoon"]{
+    --page:#fdfbf7;                 /* 奶油页底(与分数大冒险一致) */
+    --border:3px solid var(--ink);
+    --shadow:0 4px 0 var(--shadow-color);
+    --shadow-lg:0 9px 0 var(--shadow-color);
+    --radius-lg:26px;
+    --radius-md:20px;
+    --tile-border:3px solid var(--ink);
+    --deco:block;
+  }
+  html[data-theme="cartoon"] body{
+    background-image:radial-gradient(#e9e2d1 1.5px, transparent 1.5px);
+    background-size:26px 26px;
+  }
+
+  /* ===== 主题:简约 ===== */
+  html[data-theme="clean"]{
+    --page:#ffffff;
+    --border:2px solid #d8d8d8;
+    --shadow:none;
+    --shadow-lg:none;
+    --radius-lg:18px;
+    --radius-md:14px;
+    --tile-border:2px solid #dddddd;
+    --deco:none;
+  }
+
   *{margin:0;padding:0;box-sizing:border-box;}
   html,body{height:100%;}
   body{
-    background:#ffffff;
+    background:var(--page);
     color:var(--ink);
     font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;
+    transition:background-color .3s;
   }
-  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 60px;}
+  .wrap{max-width:1160px;margin:0 auto;padding:28px 20px 60px;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--en);outline-offset:3px;}
 
   /* ===== 头部 ===== */
-  header{text-align:center;padding:28px 0 24px;}
+  .hero{position:relative;text-align:center;padding:34px 0 26px;}
+  .hero-deco{display:var(--deco);}
+  .hero-deco svg{position:absolute;overflow:visible;}
+  .deco-1{top:4px;left:5%;width:46px;transform:rotate(-12deg);}
+  .deco-3{bottom:18px;left:12%;width:32px;transform:rotate(10deg);}
+  .deco-4{bottom:12px;right:13%;width:42px;}
   h1{
-    font-size:42px;color:var(--zh);font-weight:800;letter-spacing:2px;
+    font-size:clamp(40px,7vw,72px);
+    color:var(--zh);
+    font-weight:900;
+    letter-spacing:2px;
+    line-height:1.15;
+    text-wrap:balance;
   }
   .en-title{
-    font-size:20px;color:var(--en);font-weight:600;letter-spacing:3px;margin-top:6px;
+    margin-top:8px;
+    font-size:clamp(14px,2.4vw,21px);
+    color:var(--en);
+    font-weight:700;
+    letter-spacing:6px;
+  }
+  .hero-underline{
+    display:var(--deco);
+    width:min(430px,72%);
+    height:16px;
+    margin:12px auto 0;
   }
   .sub{
-    margin-top:10px;font-size:15px;color:var(--ink);
+    margin-top:12px;
+    font-size:clamp(15px,2vw,18px);
+    font-weight:600;
+    color:var(--ink);
+    text-wrap:pretty;
   }
+  .theme-toggle{
+    position:absolute;top:2px;right:0;
+    background:var(--card);color:var(--ink);
+    border:var(--border);border-radius:999px;
+    font-size:14px;font-weight:700;
+    padding:8px 16px;cursor:pointer;
+    box-shadow:0 3px 0 var(--shadow-color);
+    transition:transform .15s, box-shadow .15s, border-color .15s;
+    touch-action:manipulation;
+  }
+  .theme-toggle:active{transform:translateY(2px);box-shadow:0 1px 0 var(--shadow-color);}
+  html[data-theme="clean"] .theme-toggle{box-shadow:none;}
 
   /* ===== Tab 栏 ===== */
   .tabs{
-    display:flex;justify-content:center;gap:12px;margin:20px 0 28px;
+    display:flex;justify-content:center;gap:14px;flex-wrap:wrap;
+    margin:22px 0 30px;
   }
   .tab{
-    background:#ffffff;color:var(--ink);border:2px solid var(--line);
-    font-size:18px;font-weight:700;padding:12px 34px;border-radius:12px;
-    cursor:pointer;transition:border-color .15s, color .15s;user-select:none;
+    appearance:none;
+    background:var(--card);color:var(--ink);
+    border:var(--border);border-radius:999px;
+    font-size:clamp(16px,2.2vw,20px);font-weight:800;
+    padding:11px 32px;cursor:pointer;
+    box-shadow:0 4px 0 var(--shadow-color);
+    user-select:none;touch-action:manipulation;
+    transition:transform .15s, box-shadow .15s, border-color .15s, color .15s;
   }
-  .tab:active{transform:scale(.97);}
+  .tab small{display:block;font-size:11px;font-weight:600;letter-spacing:2px;opacity:.72;margin-top:2px;}
+  .tab:active{transform:translateY(3px);box-shadow:0 1px 0 var(--shadow-color);}
   .tab.on{
     border-color:var(--en);color:var(--en);
-    box-shadow:inset 0 -4px 0 var(--en);
   }
-  .tab small{display:block;font-size:12px;font-weight:500;color:var(--ink);opacity:.75;letter-spacing:1px;}
+  html[data-theme="clean"] .tab{box-shadow:none;}
+  html[data-theme="clean"] .tab.on{box-shadow:inset 0 -4px 0 var(--en);}
+  html[data-theme="clean"] .tab:active{transform:translateY(1px);box-shadow:inset 0 -3px 0 var(--en);}
+
+  /* ===== 学科主题色 ===== */
+  .subject-math   {--subject:var(--en); --subject-soft:#eef1fb;}
+  .subject-english{--subject:var(--ok); --subject-soft:#e7f6ec;}
+  .subject-chinese{--subject:var(--zh); --subject-soft:#fdecea;}
 
   /* ===== 游戏卡片 ===== */
   .panel{display:none;}
-  .panel.on{display:block;}
+  .panel.on{display:block;animation:fadeUp .3s both;}
   .grid{
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:24px;
   }
   .card{
-    background:var(--card);border:2px solid var(--line);border-radius:16px;
-    padding:24px 22px;text-decoration:none;color:var(--ink);
-    display:flex;flex-direction:column;gap:10px;
-    transition:border-color .15s, transform .15s;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;
+    background:var(--card);
+    border:var(--border);border-radius:var(--radius-lg);
+    padding:28px 22px 24px;
+    text-decoration:none;color:var(--ink);
+    box-shadow:var(--shadow);
+    transition:transform .18s, box-shadow .18s, border-color .18s;
+    animation:cardIn .5s both;
+    touch-action:manipulation;
   }
-  .card:hover{border-color:var(--en);transform:translateY(-3px);}
-  .card:active{transform:translateY(0);}
-  .card .icon{font-size:44px;line-height:1;}
-  .card .name{font-size:22px;font-weight:800;color:var(--title);}
-  .card .name-en{font-size:14px;font-weight:600;color:var(--en);letter-spacing:.5px;}
-  .card .desc{font-size:14px;line-height:1.6;color:var(--ink);}
-  .card .meta{
-    display:flex;gap:8px;margin-top:auto;flex-wrap:wrap;
+  .card:nth-child(2){animation-delay:.08s;}
+  .card:nth-child(3){animation-delay:.16s;}
+  .card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);}
+  .card:hover .icon-tile{transform:rotate(-8deg) scale(1.08);}
+  .card:active{transform:translateY(-1px);box-shadow:0 2px 0 var(--shadow-color);}
+  html[data-theme="clean"] .card:hover{border-color:var(--en);}
+
+  .icon-tile{
+    width:76px;height:76px;border-radius:22px;
+    background:var(--tile-bg);border:var(--tile-border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:42px;line-height:1;margin-bottom:2px;
+    transition:transform .18s;
+  }
+  .subject-math .icon-tile   {background:var(--subject-soft);border-color:var(--subject);}
+  .subject-english .icon-tile{background:var(--subject-soft);border-color:var(--subject);}
+  .subject-chinese .icon-tile{background:var(--subject-soft);border-color:var(--subject);}
+
+  .name{font-size:24px;font-weight:900;color:var(--title);}
+  .name-en{font-size:13px;font-weight:700;color:var(--en);letter-spacing:1px;}
+  .desc{font-size:15px;line-height:1.7;color:var(--ink);text-wrap:pretty;max-width:34ch;}
+  .meta{
+    display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+    margin-top:auto;padding-top:12px;
   }
   .badge{
-    background:var(--badge);color:#ffffff;font-size:12px;font-weight:600;
-    padding:4px 12px;border-radius:999px;letter-spacing:.5px;
+    font-size:13px;font-weight:700;padding:5px 14px;border-radius:999px;letter-spacing:.5px;
+    background:var(--badge);color:#ffffff;
   }
-  .badge.zh{background:var(--zh);}
-  .badge.en{background:var(--en);}
+  .badge.subject{background:var(--subject);color:#ffffff;}
 
-  /* ===== 空态（敬请期待）===== */
+  /* ===== 空态(敬请期待) ===== */
   .empty{
-    background:var(--card);border:2px dashed var(--line-dark);border-radius:16px;
-    text-align:center;padding:60px 20px;color:var(--ink);
+    background:var(--card);
+    border:3px dashed var(--zh);border-radius:var(--radius-lg);
+    text-align:center;padding:56px 20px;color:var(--ink);
   }
-  .empty .icon{font-size:52px;}
-  .empty .t1{font-size:20px;font-weight:800;margin-top:12px;color:var(--title);}
-  .empty .t2{font-size:14px;color:var(--en);margin-top:4px;letter-spacing:2px;}
+  .empty .icon-tile{
+    width:88px;height:88px;border-radius:24px;font-size:48px;margin:0 auto 14px;
+    background:var(--subject-soft);border-color:var(--subject);
+  }
+  .empty .t1{font-size:22px;font-weight:900;color:var(--title);}
+  .empty .t2{font-size:13px;font-weight:700;color:var(--en);margin-top:6px;letter-spacing:3px;}
 
-  footer{text-align:center;margin-top:44px;font-size:13px;color:var(--ink);opacity:.7;}
+  footer{text-align:center;margin-top:52px;font-size:13px;color:var(--ink);opacity:.72;letter-spacing:1px;}
+
+  /* ===== 动效 ===== */
+  @keyframes cardIn{
+    0%{opacity:0;transform:translateY(14px) scale(.97);}
+    100%{opacity:1;transform:none;}
+  }
+  @keyframes fadeUp{
+    0%{opacity:0;transform:translateY(8px);}
+    100%{opacity:1;transform:none;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;}
+  }
 
   /* ===== 响应式 ===== */
-  @media (max-width:600px){
-    h1{font-size:30px;}
-    .en-title{font-size:15px;}
-    .tab{font-size:16px;padding:10px 20px;flex:1;}
+  @media (max-width:680px){
+    .wrap{padding:14px 14px 44px;}
+    .hero{padding:18px 0 20px;}
+    .hero-deco{display:none;}
+    .hero-underline{display:none;}
+    .theme-toggle{position:static;margin-bottom:14px;}
     .tabs{gap:8px;}
-    .grid{grid-template-columns:1fr;}
-    .wrap{padding:20px 14px 40px;}
+    .tab{flex:1;padding:10px 6px;min-width:0;}
+    .grid{grid-template-columns:1fr;gap:18px;}
+    .card{animation-delay:0s!important;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <h1>学习乐园</h1>
+  <header class="hero">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">主题 · 卡通</button>
+    <div class="hero-deco" aria-hidden="true">
+      <svg class="deco-1" viewBox="0 0 52 52"><path d="M26 2c2 16 8 24 24 24-16 2-24 8-24 24-2-16-8-24-24-24 16-2 24-8 24-24z" fill="#2c3e9b"/></svg>
+      <svg class="deco-3" viewBox="0 0 32 32"><path d="M16 2c1 10 5 14 14 14-9 1-13 5-14 14-1-9-5-13-14-14 9-1 13-5 14-14z" fill="#f5b301"/></svg>
+      <svg class="deco-4" viewBox="0 0 42 42"><circle cx="8" cy="8" r="6" fill="#2e9e5b"/><circle cx="34" cy="12" r="5" fill="#4a5fcf"/><circle cx="12" cy="34" r="4" fill="#c44569"/></svg>
+    </div>
+    <h1>跟着课本玩游戏</h1>
     <div class="en-title">LEARNING HUB</div>
+    <svg class="hero-underline" viewBox="0 0 430 16" aria-hidden="true">
+      <path d="M10 10 C 70 2, 120 15, 180 8 S 300 3, 420 10" fill="none" stroke="#f5b301" stroke-width="7" stroke-linecap="round"/>
+    </svg>
     <div class="sub">三年级数学 · 英语 · 语文 互动学习游戏</div>
   </header>
 
-  <nav class="tabs" id="tabs">
-    <button class="tab on" data-panel="math">数学<small>MATH</small></button>
-    <button class="tab" data-panel="english">英语<small>ENGLISH</small></button>
-    <button class="tab" data-panel="chinese">语文<small>CHINESE</small></button>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="学科选择">
+    <button class="tab on" id="tab-math" data-panel="math" role="tab" aria-selected="true" aria-controls="panel-math">数学<small>MATH</small></button>
+    <button class="tab" id="tab-english" data-panel="english" role="tab" aria-selected="false" aria-controls="panel-english">英语<small>ENGLISH</small></button>
+    <button class="tab" id="tab-chinese" data-panel="chinese" role="tab" aria-selected="false" aria-controls="panel-chinese">语文<small>CHINESE</small></button>
   </nav>
 
   <!-- ===== 数学 ===== -->
-  <section class="panel on" id="panel-math">
+  <section class="panel on" id="panel-math" role="tabpanel" aria-labelledby="tab-math">
     <div class="grid">
-      <a class="card" href="math/fraction-adventure.html" target="_blank" rel="noopener">
-        <div class="icon">🍕</div>
+      <a class="card subject-math" href="math/fraction-adventure.html" target="_blank" rel="noopener">
+        <div class="icon-tile">🍕</div>
         <div class="name">分数大冒险</div>
         <div class="name-en">FRACTION ADVENTURE</div>
-        <div class="desc">切蛋糕学分数：几分之一、几分之几、比较大小，动画演示 + 闯关练习。</div>
+        <div class="desc">切蛋糕学分数:几分之一、几分之几、比较大小,动画演示 + 闯关练习。</div>
         <div class="meta">
           <span class="badge">三年级上</span>
-          <span class="badge zh">数学</span>
+          <span class="badge subject">数学</span>
         </div>
       </a>
     </div>
   </section>
 
   <!-- ===== 英语 ===== -->
-  <section class="panel" id="panel-english">
+  <section class="panel" id="panel-english" role="tabpanel" aria-labelledby="tab-english">
     <div class="grid">
-      <a class="card" href="english/word-match.html" target="_blank" rel="noopener">
-        <div class="icon">🔤</div>
+      <a class="card subject-english" href="english/word-match.html" target="_blank" rel="noopener">
+        <div class="icon-tile">🔤</div>
         <div class="name">单词消消乐</div>
         <div class="name-en">WORD MATCH</div>
-        <div class="desc">三年级英语词汇连连看，46 个单元词库，限时挑战 + 计分。</div>
+        <div class="desc">三年级英语词汇连连看,46 个单元词库,限时挑战 + 计分。</div>
         <div class="meta">
           <span class="badge">三年级全册</span>
-          <span class="badge en">英语</span>
+          <span class="badge subject">英语</span>
         </div>
       </a>
     </div>
   </section>
 
   <!-- ===== 语文 ===== -->
-  <section class="panel" id="panel-chinese">
-    <div class="empty">
-      <div class="icon">📚</div>
+  <section class="panel" id="panel-chinese" role="tabpanel" aria-labelledby="tab-chinese">
+    <div class="empty subject-chinese">
+      <div class="icon-tile">📚</div>
       <div class="t1">语文游戏筹备中</div>
       <div class="t2">COMING SOON</div>
     </div>
   </section>
 
-  <footer>Made for Chen Nuo · 学习乐园</footer>
+  <footer>Made for Chen Nuo · 跟着课本玩游戏</footer>
 </div>
 
 <script>
@@ -174,6 +319,7 @@
     for (var i = 0; i < tabs.length; i++){
       var on = tabs[i].getAttribute('data-panel') === name;
       tabs[i].classList.toggle('on', on);
+      tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
     }
     for (var key in panels){
       panels[key].classList.toggle('on', key === name);
@@ -184,6 +330,19 @@
       show(this.getAttribute('data-panel'));
     });
   }
+
+  /* ===== 主题切换(默认卡通,记住选择) ===== */
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+  function refreshLabel(){
+    toggle.textContent = (root.dataset.theme === 'cartoon') ? '主题 · 卡通' : '主题 · 简约';
+  }
+  toggle.addEventListener('click', function(){
+    root.dataset.theme = (root.dataset.theme === 'cartoon') ? 'clean' : 'cartoon';
+    try{ localStorage.setItem('gh-theme', root.dataset.theme); }catch(e){}
+    refreshLabel();
+  });
+  refreshLabel();
 })();
 </script>
 </body>

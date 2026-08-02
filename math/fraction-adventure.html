@@ -21,11 +21,21 @@
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; }
   body{
-    background:var(--page); color:var(--ink);
+    background:
+      radial-gradient(#e9e2d1 1.4px, transparent 1.4px) 0 0 / 26px 26px,
+      var(--page);
+    color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
     font-size:20px; line-height:1.6;
   }
-  .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 64px; }
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(760px 520px at 92% -8%,  rgba(44,63,155,.10), transparent 62%),
+      radial-gradient(680px 460px at -4% 104%, rgba(196,69,105,.09), transparent 62%),
+      radial-gradient(560px 420px at 55% 118%, rgba(245,179,1,.12), transparent 60%);
+  }
+  .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 64px; position:relative; z-index:1; }
 
   /* ---------- 通用控件（全部白底黑字，不透明） ---------- */
   .btn{
@@ -69,15 +79,16 @@
   .bar h2{ font-size:36px; font-weight:900; color:var(--title); margin:0; }
   .chip{ display:inline-block; font-size:16px; font-weight:800; padding:4px 12px; border:2px solid currentColor; border-radius:999px; vertical-align:middle; }
 
+  .tip-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; margin:14px 0 22px; }
   .script-card{
     background:var(--card); border:3px solid var(--ink); border-left:14px solid var(--zh);
-    border-radius:16px; padding:16px 20px; margin:14px 0 22px; box-shadow:0 4px 0 #dcd6c9;
+    border-radius:16px; padding:16px 20px; width:100%; box-shadow:0 4px 0 #dcd6c9;
   }
   .script-card .tag{ font-weight:900; font-size:18px; margin-bottom:6px; }
-  .script-card p{ margin:0; font-size:22px; }
+  .script-card p{ margin:0; font-size:22px; text-align:center; }
 
-  .hint{ font-size:20px; font-weight:700; margin:6px 0 14px; }
-  .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .hint{ font-size:20px; font-weight:700; margin:6px 0 14px; text-align:center; }
+  .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:center; margin-bottom:16px; }
   .tog.on{ background:#eef1fb; border-color:var(--en); }
 
   .stage{ display:flex; gap:28px; flex-wrap:wrap; align-items:center; justify-content:center; margin:8px 0 18px; }
@@ -103,7 +114,7 @@
   .vs-wrap{ display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap; }
   .vs-item{ text-align:center; }
   .vs-sym{ font-size:56px; font-weight:900; min-width:96px; text-align:center; color:var(--title); }
-  .fb{ font-size:24px; font-weight:800; margin-top:14px; padding:14px 18px; border-radius:16px; border:3px solid transparent; }
+  .fb{ font-size:24px; font-weight:800; margin-top:14px; padding:14px 18px; border-radius:16px; border:3px solid transparent; text-align:center; }
   .fb.ok{ background:#e7f6ec; border-color:var(--ok); color:var(--ok); }
   .fb.bad{ background:#fdecea; border-color:var(--bad); color:var(--bad); }
   .fb.plain{ background:#f6f3ea; border-color:#cfc8b8; color:var(--ink); }
@@ -111,10 +122,11 @@
   /* ---------- 测验 ---------- */
   .quiz-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
   .quiz-head .stat{ font-size:22px; font-weight:800; }
-  .opts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-top:18px; }
+  .opts{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:18px auto 0; max-width:760px; }
   .opt{ background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:18px;
         padding:20px 12px; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 4px 0 #dcd6c9;
-        display:flex; align-items:center; justify-content:center; min-height:86px; user-select:none; }
+        display:flex; align-items:center; justify-content:center; min-height:86px; user-select:none;
+        flex:1 1 160px; max-width:240px; }
   .opt:active{ transform:translateY(3px); box-shadow:0 1px 0 #dcd6c9; }
   .opt.ok{ background:#e7f6ec; border-color:var(--ok); }
   .opt.bad{ background:#fdecea; border-color:var(--bad); }
@@ -136,6 +148,9 @@
   }
   #muteBtn{ position:fixed; top:14px; right:14px; z-index:99; }
 
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none!important; transition:none!important; }
+  }
   @media (max-width:640px){
     .home-title{ font-size:40px; }
     .btn{ font-size:22px; padding:16px 20px; }
@@ -151,10 +166,13 @@
 <div id="view-home" class="wrap">
   <h1 class="home-title">分数大冒险</h1>
   <p class="home-sub">My First Fractions · 分数的初步认识</p>
-  <p class="home-tip"><span class="chip en">For Parents</span> <span class="chip zh">家长须知</span></p>
-  <div class="script-card" style="margin-top:0">
-    <div class="tag"><span class="zh">家长口播</span> · <span class="en">Parent Script</span></div>
-    <p>宝贝，今天我们来玩一个“分蛋糕”的游戏。蛋糕要分得公平，每一块都一样大，这就是数学里的“平均分”。一关一关闯，最后还有 10 道题的挑战，看看你能拿多少分！</p>
+  <p class="home-tip"><span class="chip en">Teaching Tips</span> <span class="chip zh">教学提示</span></p>
+  <div class="tip-wrap" style="margin-top:0">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p>宝贝，今天我们来玩一个“分蛋糕”的游戏。蛋糕要分得公平，每一块都一样大，这就是数学里的“平均分”。一关一关闯，最后还有 10 道题的挑战，看看你能拿多少分！</p>
+    </div>
   </div>
   <div id="map" class="map"></div>
   <div class="home-foot">
@@ -170,9 +188,12 @@
     <span id="lvChipEn" class="chip en"></span>
     <span id="lvChipZh" class="chip zh"></span>
   </div>
-  <div class="script-card">
-    <div class="tag"><span class="zh">家长口播</span> · <span class="en">Parent Script</span></div>
-    <p id="lvScript"></p>
+  <div class="tip-wrap">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p id="lvScript"></p>
+    </div>
   </div>
   <div id="levelBody"></div>
   <div class="footer-actions">
@@ -188,9 +209,12 @@
     <span class="chip en">Quiz Challenge</span>
     <span class="chip zh">10 题冲关</span>
   </div>
-  <div class="script-card">
-    <div class="tag"><span class="zh">家长口播</span> · <span class="en">Parent Script</span></div>
-    <p>一共 10 道题，答对加 10 分、答错扣 5 分。仔细看图、想一想再点答案，爸爸妈妈相信你能拿满分！</p>
+  <div class="tip-wrap">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p>一共 10 道题，答对加 10 分、答错扣 5 分。仔细看图、想一想再点答案，爸爸妈妈相信你能拿满分！</p>
+    </div>
   </div>
   <div class="quiz-head">
     <div class="stat" id="quizProg"></div>
@@ -379,6 +403,14 @@ function showToast(msg){
   var t = document.getElementById('toast');
   t.textContent = msg; t.style.display = 'block';
   clearTimeout(t._tm); t._tm = setTimeout(function(){ t.style.display='none'; }, 2200);
+}
+function toggleTip(btn){
+  var card = btn.parentNode.querySelector('.script-card');
+  var open = card.style.display !== 'none';
+  card.style.display = open ? 'none' : '';
+  btn.textContent = open ? '💡 教学提示 ▾' : '收起提示 ▴';
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+  if(!open){ card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
 }
 function goHome(){ renderHome(); showView('view-home'); curLevel = 0; }
 function renderHome(){
