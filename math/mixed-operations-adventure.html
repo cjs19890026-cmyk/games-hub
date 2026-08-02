@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>混合运算大冒险 Mixed Operations Adventure</title>
+<style>
+  :root{
+    --ink:#333333;      /* 正文黑字 */
+    --title:#111111;    /* 标题黑 */
+    --en:#2c3e9b;       /* EN 蓝 */
+    --zh:#c44569;       /* ZH 粉 */
+    --hl:#ff8f3f;       /* 高亮橙 */
+    --line:#333333;
+    --star:#f5b301;     /* 星星金 */
+    --ok:#2e9e5b;       /* 答对绿 */
+    --bad:#d64550;      /* 答错红 */
+    --card:#ffffff;     /* 控件白底 */
+    --page:#fdfbf7;
+
+    --pink:#ff8fb2;   --pink-soft:#ffe3ec;
+    --orange:#ff9f5a; --orange-soft:#ffe7d1;
+    --green:#45c486;  --green-soft:#d9f5e7;
+    --purple:#8f7bf0; --purple-soft:#e6e0fd;
+    --blue:#4f9dff;   --blue-soft:#dcebff;
+    --lemon:#ffd54f;  --lemon-soft:#fff3c9;
+    --aqua:#43d4e6;
+    --btn-shadow:#ffc6d8;
+    --btn-shadow-blue:#b9d0ff;
+    --card-shadow:#e6dfd2;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(#ffffff 1.6px, transparent 1.6px) 0 0 / 26px 26px,
+      linear-gradient(180deg,#7ecdf6 0%,#b4e6fb 38%,#e9f8ff 62%,#fff3d6 100%);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:20px; line-height:1.6;
+  }
+  :focus-visible{ outline:3px solid var(--blue); outline-offset:3px; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 64px; position:relative; z-index:1; }
+
+  /* ---------- 卡通天空背景装饰 ---------- */
+  .bg-deco{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .bg-deco span{ position:absolute; display:block; line-height:1; user-select:none; }
+  .d-sun{ top:22px; left:3%; font-size:86px; filter:drop-shadow(0 8px 12px rgba(255,175,40,.45)); animation:sunPulse 6s ease-in-out infinite; }
+  .d-cloud{ font-size:96px; opacity:.92; filter:drop-shadow(0 8px 12px rgba(70,140,190,.25)); animation:sway 9s ease-in-out infinite; }
+  .c1{ top:52px; right:6%; }
+  .c2{ top:225px; left:4%; font-size:64px; opacity:.85; animation-delay:1.2s; }
+  .c3{ top:46%; right:3%; font-size:58px; opacity:.8; animation-delay:2.3s; }
+  .d-abacus{ top:17%; left:36%; font-size:46px; animation:bob 4.8s ease-in-out infinite; }
+  .d-plus{ top:29%; right:12%; font-size:44px; animation:twinkle 3.2s ease-in-out infinite; }
+  .d-eq{ top:12%; right:26%; font-size:36px; animation:bob 5.4s ease-in-out infinite; }
+  .d-balloon{ font-size:52px; animation:bob 4.6s ease-in-out infinite; filter:drop-shadow(0 6px 8px rgba(0,0,0,.14)); }
+  .b1{ top:44%; left:2%; animation-delay:.5s; }
+  .b2{ top:58%; right:5%; font-size:42px; animation-delay:1.3s; }
+  .d-star{ font-size:34px; animation:twinkle 3s ease-in-out infinite; }
+  .s1{ top:31%; right:17%; animation-delay:.4s; }
+  .s2{ top:52%; left:11%; font-size:26px; animation-delay:1s; }
+  .s3{ top:14%; left:58%; font-size:24px; animation-delay:1.7s; }
+  .d-pencil{ bottom:26px; right:6%; font-size:54px; animation:bob 5s ease-in-out infinite; }
+  .d-hill{ position:absolute; bottom:-70px; left:-6%; width:62%; height:230px; background:linear-gradient(180deg,#7ce0b8,#4fc58e); border-radius:50% 50% 0 0 / 100% 100% 0 0; opacity:.5; }
+  .h2{ left:44%; width:70%; height:270px; background:linear-gradient(180deg,#9be8c8,#64d6a2); opacity:.38; }
+
+  @keyframes sunPulse{ 0%,100%{ transform:scale(1) rotate(0deg);} 50%{ transform:scale(1.07) rotate(5deg);} }
+  @keyframes sway{ 0%,100%{ transform:translateX(-12px);} 50%{ transform:translateX(12px);} }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-15px) rotate(2deg);} }
+  @keyframes twinkle{ 0%,100%{ opacity:.45; transform:scale(.9);} 50%{ opacity:1; transform:scale(1.18);} }
+  @keyframes confFall{ 0%{ transform:translateY(-40px) rotate(0deg); opacity:1;} 100%{ transform:translateY(600px) rotate(300deg); opacity:.1; } }
+  @keyframes cardIn{ 0%{ opacity:0; transform:translateY(16px) scale(.97);} 100%{ opacity:1; transform:none; } }
+  @keyframes pop{ 0%{ transform:scale(.97);} 100%{ transform:scale(1);} }
+  @keyframes blinkRed{ 0%,100%{ opacity:1;} 50%{ opacity:.35;} }
+
+  /* ---------- 通用控件（全部白底黑字，不透明） ---------- */
+  .btn{
+    background:var(--card); color:var(--ink);
+    border:3px solid var(--ink); border-radius:18px;
+    padding:18px 28px; font-size:26px; font-weight:700;
+    cursor:pointer; user-select:none; touch-action:manipulation;
+    box-shadow:0 5px 0 var(--btn-shadow);
+    transition:transform .12s, box-shadow .12s, background-color .15s, color .15s;
+  }
+  .btn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .btn:disabled{ background:#eeeeee; color:#999999; border-color:#bbbbbb; box-shadow:0 4px 0 #dddddd; cursor:not-allowed; }
+  .btn.primary{ border-color:var(--en); color:var(--en); box-shadow:0 5px 0 var(--btn-shadow-blue); }
+  .btn.primary:hover:not(:disabled){ box-shadow:0 7px 0 var(--btn-shadow-blue); }
+  .btn.primary:active{ box-shadow:0 1px 0 var(--btn-shadow-blue); }
+  .btn.small{ font-size:20px; padding:10px 18px; border-radius:14px; box-shadow:0 4px 0 var(--btn-shadow); }
+  .btn.small:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--btn-shadow); }
+
+  .card{
+    background:var(--card); border:3px solid var(--ink);
+    border-radius:22px; padding:22px; box-shadow:0 5px 0 var(--card-shadow);
+  }
+  .en{ color:var(--en); }
+  .zh{ color:var(--zh); }
+
+  /* ---------- 首页 ---------- */
+  .home-title{ font-size:54px; font-weight:900; color:var(--title); margin:14px 0 4px; text-align:center; letter-spacing:2px; text-wrap:balance; }
+  .home-title .t-emoji{ display:inline-block; font-size:.68em; vertical-align:middle; animation:bob 4s ease-in-out infinite; }
+  .home-title .t-emoji.e2{ animation-delay:1.1s; }
+  .home-under{ display:block; width:min(340px,72%); height:14px; margin:10px auto 8px; }
+  .home-sub{ font-size:24px; color:var(--title); text-align:center; margin:0 0 8px; font-weight:700; }
+  .home-tip{ text-align:center; margin:0 0 26px; }
+  .map{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
+  .level-card{ text-align:center; cursor:pointer; border-color:var(--lv); box-shadow:0 6px 0 var(--lv-shadow); animation:cardIn .45s both; transition:transform .15s, box-shadow .15s; }
+  .level-card:nth-child(2){ animation-delay:.06s; }
+  .level-card:nth-child(3){ animation-delay:.12s; }
+  .level-card:nth-child(4){ animation-delay:.18s; }
+  .level-card:hover{ transform:translateY(-4px); box-shadow:0 10px 0 var(--lv-shadow); }
+  .level-card:hover .icon{ transform:rotate(-8deg) scale(1.08); }
+  .level-card:active{ transform:translateY(0); box-shadow:0 2px 0 var(--lv-shadow); }
+  .lv1{ --lv:var(--pink);   --lv-shadow:#ffc9d9; }
+  .lv2{ --lv:var(--blue);   --lv-shadow:#b9d0ff; }
+  .lv3{ --lv:var(--green);  --lv-shadow:#bcead3; }
+  .lv4{ --lv:var(--purple); --lv-shadow:#cfc5f8; }
+  .level-card .icon{
+    display:flex; align-items:center; justify-content:center;
+    width:96px; height:96px; margin:4px auto 6px; font-size:48px;
+    background:var(--card); border:4px solid var(--lv); border-radius:26px;
+    box-shadow:0 5px 0 var(--lv-shadow);
+    transition:transform .15s;
+  }
+  .level-card .lv-zh{ font-size:30px; font-weight:900; color:var(--zh); margin-top:6px; }
+  .level-card .lv-en{ font-size:18px; font-weight:700; color:var(--en); letter-spacing:.5px; }
+  .level-card .lv-desc{ font-size:18px; color:var(--ink); margin-top:8px; }
+  .level-card .stars{ font-size:30px; margin-top:10px; letter-spacing:4px; }
+  .level-card.locked{ background:#f0f0f0; border-color:#aaaaaa; box-shadow:0 5px 0 #dddddd; cursor:not-allowed; animation:none; }
+  .level-card.locked .icon{ background:#e6e6e6; border-color:#aaaaaa; filter:grayscale(1); }
+  .level-card.locked .lv-zh,.level-card.locked .lv-desc{ color:#888888; }
+  .level-card .new-tag{ display:inline-block; background:var(--zh); color:#fff; font-size:14px; font-weight:800; border-radius:999px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+
+  /* ---------- 关卡页 ---------- */
+  .bar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .bar h2{ font-size:36px; font-weight:900; color:var(--title); margin:0; }
+  .chip{ display:inline-block; font-size:16px; font-weight:800; padding:4px 14px; border:none; border-radius:999px; vertical-align:middle; color:#fff; letter-spacing:.5px; }
+  .chip.en{ background:var(--en); }
+  .chip.zh{ background:var(--zh); }
+
+  .tip-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; margin:14px 0 22px; }
+  .script-card{
+    background:var(--card); border:3px solid var(--ink); border-left:14px solid var(--zh);
+    border-radius:16px; padding:16px 20px; width:100%; box-shadow:0 5px 0 #ffd2e0;
+  }
+  .script-card .tag{ font-weight:900; font-size:18px; margin-bottom:6px; }
+  .script-card p{ margin:0; font-size:22px; text-align:center; }
+  .pop{ animation:pop .2s ease-out; }
+
+  .hint{ font-size:20px; font-weight:700; margin:6px 0 14px; text-align:center; }
+
+  /* ---------- 规则卡与算式 ---------- */
+  .rule-card{
+    background:#fffdf3; border:3px solid var(--ink); border-radius:22px;
+    padding:20px 22px; box-shadow:0 5px 0 var(--card-shadow); margin-bottom:18px;
+  }
+  .rule-tag{ display:inline-block; background:var(--en); color:#fff; font-size:16px; font-weight:800; padding:4px 14px; border-radius:999px; letter-spacing:.5px; }
+  .rule-text{ font-size:25px; font-weight:800; color:var(--ink); margin:12px 0 8px; line-height:1.55; text-align:center; text-wrap:pretty; }
+  .expr{
+    font-size:50px; font-weight:900; text-align:center; color:var(--title);
+    letter-spacing:2px; font-variant-numeric:tabular-nums; padding:14px 8px; margin:12px 0 4px;
+  }
+  .expr .n{ color:var(--title); }
+  .op-add{ color:var(--en); }
+  .op-sub{ color:var(--purple); }
+  .op-mul{ color:var(--orange); }
+  .op-div{ color:var(--green); }
+  .paren{ color:var(--zh); font-weight:900; }
+  .steps{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .step{
+    display:flex; align-items:center; gap:12px; background:var(--card);
+    border:3px dashed var(--en); border-radius:16px; padding:12px 16px;
+    font-size:24px; font-weight:800; color:var(--ink); box-shadow:0 4px 0 var(--btn-shadow-blue);
+    animation:cardIn .3s both;
+  }
+  .step-tag{ background:var(--zh); color:#fff; font-size:15px; font-weight:800; padding:3px 10px; border-radius:999px; white-space:nowrap; }
+
+  /* ---------- 测验 ---------- */
+  .quiz-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .quiz-head .stat{ font-size:22px; font-weight:800; }
+  .timer{ font-variant-numeric:tabular-nums; }
+  .timer.danger{ color:var(--bad); animation:blinkRed .55s steps(2) infinite; }
+  .opts{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:18px auto 0; max-width:780px; }
+  .opt{
+    background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:18px;
+    padding:16px 12px; font-size:30px; font-weight:800; cursor:pointer; box-shadow:0 5px 0 var(--btn-shadow);
+    display:flex; align-items:center; justify-content:center; min-height:86px; user-select:none;
+    flex:1 1 150px; max-width:250px; transition:transform .12s, box-shadow .12s;
+    font-variant-numeric:tabular-nums;
+  }
+  .opt:hover:not(.ok):not(.bad){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .opt:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .opt.ok{ background:#e7f6ec; border-color:var(--ok); }
+  .opt.bad{ background:#fdecea; border-color:var(--bad); }
+  .opt.fml{ font-size:26px; }
+  .q-text{ font-size:28px; font-weight:900; color:var(--title); margin:8px 0 4px; text-align:center; }
+  .q-expr{ font-size:46px; font-weight:900; text-align:center; color:var(--title); letter-spacing:2px; font-variant-numeric:tabular-nums; margin:6px 0 2px; }
+  .q-sub{ font-size:20px; font-weight:700; color:var(--ink); text-align:center; margin:2px 0 8px; }
+  .story-card{
+    background:var(--lemon-soft); border:3px solid var(--lemon); border-radius:20px;
+    padding:16px 20px; font-size:25px; font-weight:800; line-height:1.65;
+    color:var(--title); box-shadow:0 5px 0 #f1df9e; text-align:center;
+  }
+  .story-card .scene{ font-size:30px; margin-right:4px; }
+  .hint-row{ text-align:center; margin-top:12px; }
+  .hint-box{
+    display:none; background:#f6f3ea; border:3px solid #cfc8b8; border-radius:14px;
+    padding:10px 16px; font-size:20px; font-weight:700; color:var(--ink); margin-top:10px;
+  }
+
+  .fb{ font-size:24px; font-weight:800; margin-top:14px; padding:14px 18px; border-radius:16px; border:3px solid transparent; text-align:center; }
+  .fb.ok{ background:#e7f6ec; border-color:var(--ok); color:var(--ok); }
+  .fb.bad{ background:#fdecea; border-color:var(--bad); color:var(--bad); }
+  .fb.plain{ background:#f6f3ea; border-color:#cfc8b8; color:var(--ink); }
+
+  /* ---------- 结果页 ---------- */
+  .result{ text-align:center; padding-top:24px; position:relative; }
+  .result .big-score{ font-size:88px; font-weight:900; color:var(--title); line-height:1.1; }
+  @supports ((-webkit-background-clip:text) or (background-clip:text)){
+    .result .big-score{
+      background:linear-gradient(90deg,var(--en),var(--purple),var(--zh),var(--orange));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+  }
+  .result .big-stars{ font-size:64px; letter-spacing:8px; margin:10px 0; }
+  .result .msg{ font-size:28px; font-weight:800; margin:12px 0 26px; }
+  #confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  #confetti span{ position:absolute; top:-40px; animation:confFall linear both; }
+  .footer-actions{ text-align:center; margin-top:26px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  #toast{
+    position:fixed; left:50%; bottom:40px; transform:translateX(-50%);
+    background:var(--card); color:var(--ink); border:3px solid var(--zh); border-radius:16px;
+    padding:14px 26px; font-size:22px; font-weight:800; box-shadow:0 5px 0 var(--btn-shadow);
+    display:none; z-index:99; max-width:92vw;
+  }
+  #muteBtn{ position:fixed; top:14px; right:14px; z-index:99; }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none!important; transition:none!important; }
+  }
+  @media (max-width:640px){
+    .home-title{ font-size:40px; }
+    .btn{ font-size:22px; padding:16px 20px; }
+    .q-text{ font-size:24px; }
+    .q-expr{ font-size:34px; }
+    .expr{ font-size:36px; }
+    .story-card{ font-size:22px; }
+    .d-abacus,.d-plus,.d-eq,.d-balloon,.d-star,.d-pencil,.d-hill{ display:none; }
+    .d-sun{ font-size:56px; top:10px; }
+    .d-cloud{ font-size:56px; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-deco" aria-hidden="true">
+  <span class="d-sun">☀️</span>
+  <span class="d-cloud c1">☁️</span>
+  <span class="d-cloud c2">☁️</span>
+  <span class="d-cloud c3">☁️</span>
+  <span class="d-abacus">🧮</span>
+  <span class="d-plus">➕</span>
+  <span class="d-eq">➗</span>
+  <span class="d-balloon b1">🎈</span>
+  <span class="d-balloon b2">🎈</span>
+  <span class="d-star s1">⭐</span>
+  <span class="d-star s2">✨</span>
+  <span class="d-star s3">🌟</span>
+  <span class="d-pencil">✏️</span>
+  <span class="d-hill h1"></span>
+  <span class="d-hill h2"></span>
+</div>
+<button id="muteBtn" class="btn small" onclick="toggleMute()">🔊</button>
+<div id="toast"></div>
+
+<!-- ================= 首页：关卡地图 ================= -->
+<div id="view-home" class="wrap">
+  <h1 class="home-title"><span class="t-emoji">🧮</span> 混合运算大冒险 <span class="t-emoji e2">✨</span></h1>
+  <svg class="home-under" viewBox="0 0 340 14" aria-hidden="true">
+    <defs>
+      <linearGradient id="underGrad" x1="0" x2="1">
+        <stop offset="0" stop-color="#4f9dff"/><stop offset=".5" stop-color="#ff8fb2"/><stop offset="1" stop-color="#ffd54f"/>
+      </linearGradient>
+    </defs>
+    <path d="M6 9 C 40 2, 70 12, 105 8 S 175 3, 215 9 S 290 3, 334 7" fill="none" stroke="url(#underGrad)" stroke-width="6" stroke-linecap="round"/>
+  </svg>
+  <p class="home-sub">Mixed Operations · 三年级上册 第二单元</p>
+  <p class="home-tip"><span class="chip en">Teaching Tips</span> <span class="chip zh">教学提示</span></p>
+  <div class="tip-wrap" style="margin-top:0">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p>宝贝，第二单元的混合运算有三条重要规则：① 同级运算从左往右算；② 有乘除也有加减，先算乘除；③ 有小括号，先算括号里面的。先看规则演示，再闯关，最后去综合挑战当小冠军！</p>
+    </div>
+  </div>
+  <div id="map" class="map"></div>
+  <div class="home-foot">
+    <button class="btn small" onclick="resetAll()">🗑 重置闯关进度</button>
+  </div>
+</div>
+
+<!-- ================= 关卡页（1/2/3/4 共用容器） ================= -->
+<div id="view-level" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="goHome()">← 返回地图</button>
+    <h2 id="lvTitle"></h2>
+    <span id="lvChipEn" class="chip en"></span>
+    <span id="lvChipZh" class="chip zh"></span>
+  </div>
+  <div class="tip-wrap">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p id="lvScript"></p>
+    </div>
+  </div>
+  <div id="levelBody"></div>
+</div>
+
+<!-- ================= 挑战页 ================= -->
+<div id="view-quiz" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="quitQuiz()">← 返回地图</button>
+    <h2 id="qzTitle">挑战</h2>
+    <span id="qzChipEn" class="chip en"></span>
+    <span id="qzChipZh" class="chip zh"></span>
+  </div>
+  <div class="quiz-head">
+    <div class="stat" id="quizProg"></div>
+    <div class="stat">当前得分：<span id="quizScore">0</span> 分</div>
+    <div class="stat">⏱ 剩余：<span id="quizTimer" class="timer">60</span> 秒</div>
+  </div>
+  <div class="card" id="quizBody"></div>
+  <div id="quizFb"></div>
+  <div class="footer-actions">
+    <button id="quizNext" class="btn primary" style="display:none" onclick="nextQ()">下一题 →</button>
+  </div>
+</div>
+
+<!-- ================= 结果页 ================= -->
+<div id="view-result" class="wrap" style="display:none">
+  <div class="result card">
+    <div id="confetti" aria-hidden="true"></div>
+    <h2 style="font-size:38px;color:var(--title);margin:0">挑战结束！</h2>
+    <div class="big-stars" id="rStars"></div>
+    <div class="big-score"><span id="rScore">0</span> 分</div>
+    <div class="msg" id="rMsg"></div>
+    <div class="footer-actions" style="margin-top:6px">
+      <button class="btn primary" id="rRetry" onclick="retryChallenge()">🔁 再挑战一次</button>
+      <button class="btn" onclick="goHome()">🏠 回到地图</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   数据区（全部内嵌，离线可用）
+===================================================== */
+var LEVELS = [
+  { id:1, icon:'🧮', zh:'同级运算', en:'Same-Level Ops', desc:'只有加减，或只有乘除，从左往右算' },
+  { id:2, icon:'⚡', zh:'两级运算', en:'Two-Level Ops', desc:'先算乘除，再算加减' },
+  { id:3, icon:'🎩', zh:'括号魔法', en:'Parentheses', desc:'先算小括号里面的' },
+  { id:4, icon:'🏆', zh:'综合挑战', en:'Grand Challenge', desc:'混合运算 + 解决实际问题' }
+];
+
+var SCRIPTS = {
+  1:'同级运算就像排队走路，只能按从左到右的顺序一步一步算。先看看规则演示，再开始小练习吧！',
+  2:'有乘有除还有加减时，乘除是"小队长"，要优先算！比如 25+4×6，先算 4×6=24，再算 25+24=49。',
+  3:'小括号像一扇魔法门，要先打开它，把里面的算式算完，再算外面：比如 (34+26)÷6，先算 34+26=60，再算 60÷6=10。',
+  4:'把三条规则都用起来，还要会读生活中的小故事、列综合算式。60 秒综合大挑战，冲呀！'
+};
+
+var RULES = {
+  1:{ rule:'同级运算：算式里只有加减，或只有乘除，按从左到右的顺序依次计算。',
+      expr:[{t:'72',cls:'n'},{t:'-',cls:'op op-sub'},{t:'38',cls:'n'},{t:'+',cls:'op op-add'},{t:'45',cls:'n'}],
+      steps:[{ label:'第 1 步', txt:'先算 72 − 38 = 34' },
+             { label:'第 2 步', txt:'再算 34 + 45 = 79' }],
+      ans:'79' },
+  2:{ rule:'两级运算：算式里有乘除也有加减，先算乘除，再算加减。',
+      expr:[{t:'25',cls:'n'},{t:'+',cls:'op op-add'},{t:'4',cls:'n'},{t:'×',cls:'op op-mul'},{t:'6',cls:'n'}],
+      steps:[{ label:'第 1 步', txt:'先算 4 × 6 = 24' },
+             { label:'第 2 步', txt:'再算 25 + 24 = 49' }],
+      ans:'49' },
+  3:{ rule:'带括号：算式里有小括号，先算括号里面的，再算括号外面的。',
+      expr:[{t:'(',cls:'paren'},{t:'34',cls:'n'},{t:'+',cls:'op op-add'},{t:'26',cls:'n'},{t:')',cls:'paren'},{t:'÷',cls:'op op-div'},{t:'6',cls:'n'}],
+      steps:[{ label:'第 1 步', txt:'先算括号里 34 + 26 = 60' },
+             { label:'第 2 步', txt:'再算 60 ÷ 6 = 10' }],
+      ans:'10' }
+};
+
+var JUDGE_Q = [
+  { q:'计算 36÷6×2 时，要先算 36÷6。', a:true,  ex:'只有乘除，从左往右：先算 36÷6=6，再算 6×2=12。' },
+  { q:'计算 28−12÷4 时，要先算 28−12。', a:false, ex:'有乘除和加减，先算乘除：12÷4=3，再算 28−3=25。' },
+  { q:'计算 (8+4)×5 时，要先算 8+4。', a:true,  ex:'有小括号，先算括号里的 8+4=12，再算 12×5=60。' },
+  { q:'算式里只有加法和减法时，要从左往右依次计算。', a:true,  ex:'同级运算按从左到右的顺序计算。' },
+  { q:'计算 24÷3×4 时，要先算 3×4。', a:false, ex:'同级运算从左往右，先算 24÷3=8，再算 8×4=32。' },
+  { q:'小括号可以改变运算顺序，要先算括号里面的。', a:true,  ex:'有小括号的算式，先算小括号里面的。' }
+];
+
+var STORY_Q = [
+  { text:'美术课上，老师发了 4 盒彩笔，每盒 6 支，又发了 5 支散装彩笔，一共发了多少支？', scene:'🎨',
+    ans:29, wrongs:[24, 35, 15], ex:'先算 4×6=24 支，再算 24+5=29 支。' },
+  { text:'图书角有 60 本故事书，借走 24 本，剩下的平均分给 6 个小组，每组分几本？', scene:'📚',
+    ans:6, wrongs:[56, 10, 4], ex:'先算剩下 60−24=36 本，再算 36÷6=6 本。' },
+  { text:'妈妈买了 3 千克苹果，每千克 4 元，付给收银员 20 元，应找回多少元？', scene:'🍎',
+    ans:8, wrongs:[68, 12, 9], ex:'先算 3×4=12 元，再算 20−12=8 元。' },
+  { text:'同学们做操站成 4 行，每行 9 人，其中女生有 12 人，男生有多少人？', scene:'🏃',
+    ans:24, wrongs:[23, 45, 36], ex:'先算一共 4×9=36 人，再算 36−12=24 人。' },
+  { text:'小华有 50 元，买了一个 18 元的文具盒，剩下的钱买 8 元一本的笔记本，最多能买几本？', scene:'✏️',
+    ans:4, wrongs:[8, 6, 2], ex:'先算剩下 50−18=32 元，再算 32÷8=4 本。' },
+  { text:'每盒酸奶 6 元，买了 3 盒，又买了一袋 4 元的面包，一共花了多少元？', scene:'🥛',
+    ans:22, wrongs:[13, 30, 18], ex:'先算 6×3=18 元，再算 18+4=22 元。' },
+  { text:'停车场原来有 45 辆车，开走 18 辆，又开来 12 辆，现在有多少辆？', scene:'🚗',
+    ans:39, wrongs:[51, 15, 30], ex:'从左往右：先算 45−18=27，再算 27+12=39 辆。' },
+  { text:'一根彩带长 80 厘米，剪去 26 厘米后，剩下的平均分成 6 段，每段长多少厘米？', scene:'🎀',
+    ans:9, wrongs:[72, 8, 10], ex:'先算剩下 80−26=54 厘米，再算 54÷6=9 厘米。' }
+];
+
+var FORMULA_Q = [
+  { text:'二年级有 45 人参加合唱，三年级比二年级多 12 人，四年级比三年级少 8 人，四年级有多少人？正确列式是？', scene:'🎤',
+    ans:'45+12−8', wrongs:['45−12+8','45+12+8','45−8+12'], ex:'先算三年级的 45+12，再减去 8。' },
+  { text:'每盒装 6 个苹果，装了 4 盒，还剩下 5 个苹果，一共有多少个苹果？正确列式是？', scene:'🍎',
+    ans:'6×4+5', wrongs:['6+4+5','6×4−5','6×(4+5)'], ex:'先算 6×4=24 个，再加上剩下的 5 个。' },
+  { text:'有 30 个桃子，每 6 个装一盘，先装好 2 盘，还剩多少个桃子？正确列式是？', scene:'🍑',
+    ans:'30−6×2', wrongs:['(30−6)×2','30÷6−2','30−6÷2'], ex:'先算 2 盘共 6×2=12 个，再算 30−12=18 个。' },
+  { text:'小明有 40 元，买 3 本 5 元的书，还剩多少元？正确列式是？', scene:'📖',
+    ans:'40−3×5', wrongs:['(40−3)×5','40−3−5','40+3×5'], ex:'先算 3 本书共 3×5=15 元，再算 40−15=25 元。' }
+];
+
+/* =====================================================
+   全局状态与存档
+===================================================== */
+var SAVE_KEY = 'mixed-operations-adventure-v1';
+var G = { unlocked:1, stars:{1:0,2:0,3:0,4:0}, best:{1:0,2:0,3:0,4:0}, muted:false };
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }catch(e){}
+}
+function load(){
+  try{
+    var s = localStorage.getItem(SAVE_KEY);
+    if(s){ var o = JSON.parse(s); if(o && o.stars){ G = o; } }
+  }catch(e){}
+}
+function starStr(n, total){
+  var s = '';
+  for(var i=0;i<total;i++){ s += (i < n ? '⭐' : '☆'); }
+  return s;
+}
+
+/* =====================================================
+   随机工具与数学
+===================================================== */
+function rnd(a, b){ return a + Math.floor(Math.random()*(b - a + 1)); }
+function pick(arr){ return arr[rnd(0, arr.length-1)]; }
+function shuffle(arr){
+  for(var i=arr.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+function divisors(n){
+  var out = [];
+  for(var i=2;i<=n;i++){ if(n % i === 0){ out.push(i); } }
+  return out;
+}
+function applyOp(a, b, op){
+  if(op === '+'){ return a + b; }
+  if(op === '-'){ return a - b; }
+  if(op === '×'){ return a * b; }
+  if(op === '÷'){ return (b !== 0 && a % b === 0) ? a / b : null; }
+  return null;
+}
+function optsFrom(ans, wrongs){
+  var set = [ans];
+  for(var i=0;i<wrongs.length;i++){
+    var w = wrongs[i];
+    if(typeof w === 'number' && w >= 0 && w !== ans && set.indexOf(w) < 0){ set.push(w); }
+  }
+  var guard = 0;
+  while(set.length < 4 && guard < 200){
+    guard++;
+    var d = ans + (Math.random()<0.5 ? -1 : 1) * rnd(1, 9);
+    if(d >= 0 && d !== ans && set.indexOf(d) < 0){ set.push(d); }
+  }
+  if(set.length < 4){ set.push(ans + set.length + 1); }
+  return shuffle(set);
+}
+function tryGen(fn){
+  for(var i=0;i<80;i++){
+    var it = fn();
+    if(it){ return it; }
+  }
+  return null;
+}
+function exprHTML(t){
+  var out = '', num = '';
+  for(var i=0;i<t.length;i++){
+    var ch = t.charAt(i);
+    if(ch >= '0' && ch <= '9'){ num += ch; continue; }
+    if(num){ out += '<span class="n">'+num+'</span>'; num = ''; }
+    if(ch === '+'){ out += '<span class="op-add">+</span>'; }
+    else if(ch === '-'){ out += '<span class="op-sub">−</span>'; }
+    else if(ch === '×'){ out += '<span class="op-mul">×</span>'; }
+    else if(ch === '÷'){ out += '<span class="op-div">÷</span>'; }
+    else if(ch === '(' || ch === ')'){ out += '<span class="paren">'+ch+'</span>'; }
+    else { out += ch; }
+  }
+  if(num){ out += '<span class="n">'+num+'</span>'; }
+  return out;
+}
+
+/* ---- 同级（只有 +− 或只有 ×÷） ---- */
+function genPM(){
+  var a, b, c, o1, o2, v1, v2;
+  o1 = Math.random()<0.5 ? '+' : '-';
+  if(o1 === '+'){
+    a = rnd(12, 45); b = rnd(11, 45); v1 = a + b;      // v1 在 23~90
+  } else {
+    a = rnd(28, 60); b = rnd(11, a-12); v1 = a - b;    // v1 在 12~49
+  }
+  o2 = Math.random()<0.5 ? '+' : '-';
+  if(o2 === '-'){
+    if(v1 < 9){ return null; }
+    c = rnd(8, Math.min(42, v1-1));                    // 保证结果不为负
+  } else {
+    if(99 - v1 < 8){ return null; }
+    c = rnd(8, Math.min(42, 99 - v1));                 // 保证结果不超过 99
+  }
+  v2 = applyOp(v1, c, o2);
+  var w1 = applyOp(c, v1, o2);                       // 反着算
+  var w2 = applyOp(b, a, o1); if(w2 !== null){ w2 = applyOp(w2, c, o2); }
+  var wrongs = [w1, w2, v2 + rnd(1,9)*(Math.random()<0.5?-1:1)];
+  var opts = optsFrom(v2, wrongs);
+  return {
+    type:'calc', text: a+o1+b+o2+c, ans: v2, opts: opts, a: opts.indexOf(v2),
+    hint:'同级运算从左往右：先算 '+a+o1+b+'，再算 '+v1+o2+c+'。',
+    ex:'先算 '+a+o1+b+'='+v1+'，再算 '+v1+o2+c+'='+v2+'，答案是 '+v2+'。'
+  };
+}
+function genMD(){
+  var kind = rnd(0, 3), a = rnd(2, 9), b, c, o1, o2;
+  if(kind === 0){
+    o1 = '×'; o2 = '÷'; b = rnd(2, 9);
+    var ds = divisors(a*b); if(!ds.length){ return null; }
+    c = pick(ds);
+  } else if(kind === 1){
+    o1 = '÷'; o2 = '×';
+    var ds1 = divisors(a); if(!ds1.length){ return null; }
+    b = pick(ds1); c = rnd(2, 9);
+  } else if(kind === 2){
+    o1 = '×'; o2 = '×'; b = rnd(2, 6);
+    var cap = Math.floor(99 / (a * b));
+    if(cap < 2){ return null; }
+    c = rnd(2, Math.min(9, cap));
+  } else {
+    o1 = '÷'; o2 = '÷';
+    var ds2 = divisors(a); if(!ds2.length){ return null; }
+    b = pick(ds2);
+    var ds3 = divisors(a / b); if(!ds3.length){ return null; }
+    c = pick(ds3);
+  }
+  var v1 = applyOp(a, b, o1);
+  var v2 = applyOp(v1, c, o2);
+  if(v1 === null || v2 === null || v2 < 0){ return null; }
+  var wrongs = [];
+  var regroup = applyOp(a, applyOp(b, c, o2), o1);
+  if(regroup !== null && regroup !== v2){ wrongs.push(regroup); }
+  var swap = applyOp(b, a, o1); if(swap !== null){ swap = applyOp(swap, c, o2); }
+  if(swap !== null && swap !== v2 && wrongs.indexOf(swap) < 0){ wrongs.push(swap); }
+  wrongs.push(v2 + rnd(1,5)*(Math.random()<0.5?-1:1));
+  var opts = optsFrom(v2, wrongs);
+  return {
+    type:'calc', text: a+o1+b+o2+c, ans: v2, opts: opts, a: opts.indexOf(v2),
+    hint:'同级运算从左往右：先算 '+a+o1+b+'，再算 '+v1+o2+c+'。',
+    ex:'先算 '+a+o1+b+'='+v1+'，再算 '+v1+o2+c+'='+v2+'，答案是 '+v2+'。'
+  };
+}
+
+/* ---- 两级（先乘除后加减） ---- */
+function genTwo(){
+  var t = rnd(0, 7), a, b, c, o1, o2, v1, v2;
+  if(t === 0){          // a + b×c
+    b = rnd(2,9); c = rnd(2,9); v1 = b*c; a = rnd(5, Math.min(99-v1, 50));
+    o1 = '+'; o2 = '×'; v2 = a + v1;
+  } else if(t === 1){   // a − b×c
+    b = rnd(2,9); c = rnd(2,9); v1 = b*c; if(v1 >= 85){ return null; }
+    a = rnd(v1+2, 99); o1 = '-'; o2 = '×'; v2 = a - v1;
+  } else if(t === 2){   // a + b÷c
+    b = rnd(12, 63); var ds = divisors(b); if(!ds.length){ return null; }
+    c = pick(ds); v1 = b/c; a = rnd(5, 50);
+    o1 = '+'; o2 = '÷'; v2 = a + v1; if(v2 > 99){ return null; }
+  } else if(t === 3){   // a − b÷c
+    b = rnd(12, 63); var ds3 = divisors(b); if(!ds3.length){ return null; }
+    c = pick(ds3); v1 = b/c; a = rnd(v1+1, 99);
+    o1 = '-'; o2 = '÷'; v2 = a - v1;
+  } else if(t === 4){   // a×b + c
+    a = rnd(2,9); b = rnd(2,9); v1 = a*b; c = rnd(2, 20);
+    o1 = '×'; o2 = '+'; v2 = v1 + c; if(v2 > 99){ return null; }
+  } else if(t === 5){   // a×b − c
+    a = rnd(2,9); b = rnd(2,9); v1 = a*b; c = rnd(2, v1-1);
+    o1 = '×'; o2 = '-'; v2 = v1 - c;
+  } else if(t === 6){   // a÷b + c
+    a = rnd(12, 72); var ds6 = divisors(a); if(!ds6.length){ return null; }
+    b = pick(ds6); v1 = a/b; c = rnd(2, 20);
+    o1 = '÷'; o2 = '+'; v2 = v1 + c; if(v2 > 99){ return null; }
+  } else {              // a÷b − c
+    a = rnd(24, 81); var ds7 = divisors(a); if(!ds7.length){ return null; }
+    b = pick(ds7); v1 = a/b; c = rnd(2, v1-1);
+    o1 = '÷'; o2 = '-'; v2 = v1 - c; if(v2 < 0){ return null; }
+  }
+  var text = a+o1+b+o2+c;
+  var firstCalc = (t < 4) ? (b+o2+c) : (a+o1+b);
+  var secondCalc = (t < 4) ? (a+o1+v1) : (v1+o2+c);
+  var wrong1 = applyOp(applyOp(a, b, o1), c, o2);   // 从左往右的错误算法
+  var wrongs = [wrong1, v2 + rnd(1,9)*(Math.random()<0.5?-1:1), v2 + rnd(2,10)*(Math.random()<0.5?-1:1)];
+  var opts = optsFrom(v2, wrongs);
+  return {
+    type:'calc', text: text, ans: v2, opts: opts, a: opts.indexOf(v2),
+    hint:'先乘除后加减：先算 '+firstCalc+'='+v1+'，再算剩下的部分。',
+    ex:'先算 '+firstCalc+'='+v1+'，再算 '+secondCalc+'='+v2+'，答案是 '+v2+'。'
+  };
+}
+
+/* ---- 带括号 ---- */
+function genParen(){
+  var t = rnd(0, 7), a, b, c, o1, o2, v1, v2, text;
+  if(t === 0){          // (a+b)×c
+    a = rnd(11, 28); b = rnd(11, 28); v1 = a + b;      // v1 在 22~56
+    var cap0 = Math.floor(99 / v1);
+    if(cap0 < 2){ return null; }
+    c = rnd(2, Math.min(4, cap0)); v2 = v1 * c;
+    text = '('+a+'+'+b+')×'+c; o1 = '+'; o2 = '×';
+  } else if(t === 1){   // (a−b)×c
+    a = rnd(21, 60); b = rnd(11, a-2); v1 = a - b;     // v1 在 1~49
+    var cap1 = Math.floor(99 / v1);
+    if(cap1 < 2){ return null; }
+    c = rnd(2, Math.min(6, cap1)); v2 = v1 * c;
+    text = '('+a+'-'+b+')×'+c; o1 = '-'; o2 = '×';
+  } else if(t === 2){   // (a+b)÷c
+    a = rnd(11, 48); b = rnd(11, 48); v1 = a + b;
+    var ds = divisors(v1); if(!ds.length){ return null; }
+    c = pick(ds); v2 = v1 / c;
+    text = '('+a+'+'+b+')÷'+c; o1 = '+'; o2 = '÷';
+  } else if(t === 3){   // (a−b)÷c
+    a = rnd(21, 80); b = rnd(11, a-2); v1 = a - b;
+    var ds3 = divisors(v1); if(!ds3.length){ return null; }
+    c = pick(ds3); v2 = v1 / c;
+    text = '('+a+'-'+b+')÷'+c; o1 = '-'; o2 = '÷';
+  } else if(t === 4){   // a−(b+c)
+    b = rnd(3, 18); c = rnd(2, 18); v1 = b + c; a = rnd(v1+2, 99);
+    text = a+'-('+b+'+'+c+')'; o1 = '+'; o2 = '-'; v2 = a - v1;
+  } else if(t === 5){   // a×(b−c)
+    a = rnd(2, 6); b = rnd(11, 30); c = rnd(2, b-2);
+    v1 = b - c; v2 = a * v1; if(v2 > 99){ return null; }
+    text = a+'×('+b+'-'+c+')'; o1 = '-'; o2 = '×';
+  } else if(t === 6){   // a−(b−c)
+    b = rnd(12, 40); c = rnd(2, b-2); v1 = b - c; a = rnd(v1+2, 99);
+    text = a+'-('+b+'-'+c+')'; o1 = '-'; o2 = '-'; v2 = a - v1;
+  } else {              // a÷(b−c)
+    a = rnd(24, 81); var ds7 = divisors(a); if(!ds7.length){ return null; }
+    var d = pick(ds7); v1 = d; v2 = a / d;
+    b = rnd(d+2, d+12); c = b - d;
+    text = a+'÷('+b+'-'+c+')'; o1 = '-'; o2 = '÷';
+  }
+  var inner = b+o1+c;
+  var outer = (t < 4) ? (v1+o2+c) : (a+o2+v1);
+  var noParen = evalNoParen(a, o1, b, o2, c);
+  var wrongs = [];
+  if(noParen !== null && noParen !== v2){ wrongs.push(noParen); }
+  wrongs.push(v2 + rnd(1,9)*(Math.random()<0.5?-1:1));
+  wrongs.push(v2 + rnd(2,10)*(Math.random()<0.5?-1:1));
+  var opts = optsFrom(v2, wrongs);
+  return {
+    type:'calc', text: text, ans: v2, opts: opts, a: opts.indexOf(v2),
+    hint:'有小括号先算括号里：先算 '+inner+'，再算剩下的部分。',
+    ex:'先算括号里 '+inner+'='+v1+'，再算 '+outer+'='+v2+'，答案是 '+v2+'。'
+  };
+}
+function evalNoParen(a, o1, b, o2, c){
+  var v;
+  if(o1 === '×' || o1 === '÷'){
+    v = applyOp(a, b, o1);
+    return v === null ? null : applyOp(v, c, o2);
+  }
+  if(o2 === '×' || o2 === '÷'){
+    v = applyOp(b, c, o2);
+    return v === null ? null : applyOp(a, o1, v);
+  }
+  v = applyOp(a, b, o1);
+  return v === null ? null : applyOp(v, c, o2);
+}
+
+/* =====================================================
+   题库
+===================================================== */
+function buildL1Bank(){
+  var bank = [];
+  while(bank.length < 8){
+    var it = tryGen(Math.random()<0.5 ? genPM : genMD);
+    if(it){ bank.push(it); }
+  }
+  shuffle(bank);
+  return bank.slice(0, 4);
+}
+function buildL2Bank(){
+  var bank = [];
+  while(bank.length < 14){
+    var it = tryGen(genTwo);
+    if(it){ bank.push(it); }
+  }
+  shuffle(bank);
+  return bank.slice(0, 8);
+}
+function buildL3Bank(){
+  var bank = [];
+  while(bank.length < 14){
+    var it = tryGen(genParen);
+    if(it){ bank.push(it); }
+  }
+  shuffle(bank);
+  return bank.slice(0, 8);
+}
+function buildL4Bank(){
+  var bank = [];
+  var c1 = tryGen(genPM), c2 = tryGen(genTwo), c3 = tryGen(genParen);
+  if(c1){ bank.push(c1); }
+  if(c2){ bank.push(c2); }
+  if(c3){ bank.push(c3); }
+  var judges = shuffle(JUDGE_Q.slice()).slice(0, 2);
+  for(var j=0;j<judges.length;j++){ bank.push({ type:'judge', q:judges[j].q, a:judges[j].a, hint:judges[j].ex, ex:judges[j].ex }); }
+  var stories = shuffle(STORY_Q.slice()).slice(0, 3);
+  for(var s=0;s<stories.length;s++){
+    var sOpts = optsFrom(stories[s].ans, stories[s].wrongs);
+    bank.push({ type:'story', text:stories[s].text, scene:stories[s].scene, ans:stories[s].ans, opts:sOpts, a:sOpts.indexOf(stories[s].ans), hint:stories[s].ex, ex:stories[s].ex });
+  }
+  var formulas = shuffle(FORMULA_Q.slice()).slice(0, 2);
+  for(var f=0;f<formulas.length;f++){
+    var set = [formulas[f].ans].concat(formulas[f].wrongs);
+    shuffle(set);
+    bank.push({ type:'formula', text:formulas[f].text, scene:formulas[f].scene, ans:formulas[f].ans, opts:set, a:set.indexOf(formulas[f].ans), hint:formulas[f].ex, ex:formulas[f].ex });
+  }
+  shuffle(bank);
+  return bank.slice(0, 10);
+}
+
+/* =====================================================
+   音效与语音（WebAudio + Web Speech，离线）
+===================================================== */
+var AC = null;
+function tone(freq, start, dur, type){
+  var o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, AC.currentTime + start);
+  g.gain.linearRampToValueAtTime(0.25, AC.currentTime + start + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + start + dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime + start); o.stop(AC.currentTime + start + dur + 0.05);
+}
+function sfx(ok){
+  if(G.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended'){ AC.resume(); }
+    if(ok){ tone(660, 0, 0.18); tone(880, 0.16, 0.3); }
+    else  { tone(220, 0, 0.28, 'sawtooth'); }
+  }catch(e){}
+}
+function tick(){
+  if(G.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended'){ AC.resume(); }
+    tone(880, 0, 0.05);
+  }catch(e){}
+}
+function speak(txt){
+  if(G.muted) return;
+  try{
+    if(!('speechSynthesis' in window)) return;
+    var u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'zh-CN'; u.rate = 0.95;
+    var vs = speechSynthesis.getVoices();
+    for(var i=0;i<vs.length;i++){
+      if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('zh')===0){ u.voice = vs[i]; break; }
+    }
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function toggleMute(){
+  G.muted = !G.muted; save();
+  document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+}
+
+/* =====================================================
+   视图切换 / 首页
+===================================================== */
+function showView(id){
+  var vs = ['view-home','view-level','view-quiz','view-result'];
+  for(var i=0;i<vs.length;i++){
+    document.getElementById(vs[i]).style.display = (vs[i]===id) ? '' : 'none';
+  }
+  window.scrollTo(0,0);
+}
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._tm); t._tm = setTimeout(function(){ t.style.display='none'; }, 2400);
+}
+function toggleTip(btn){
+  var card = btn.parentNode.querySelector('.script-card');
+  var open = card.style.display !== 'none';
+  card.style.display = open ? 'none' : '';
+  btn.textContent = open ? '💡 教学提示 ▾' : '收起提示 ▴';
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+  if(!open){ card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
+}
+function goHome(){
+  stopTimer();
+  renderHome(); showView('view-home'); curLevel = 0;
+}
+function renderHome(){
+  var html = '';
+  for(var i=0;i<LEVELS.length;i++){
+    var lv = LEVELS[i], locked = lv.id > G.unlocked;
+    html += '<div class="card level-card lv'+lv.id+(locked?' locked':'')+'" '+(locked?'':'onclick="openLevel('+lv.id+')"')+'>'
+          +   '<div class="icon">'+(locked?'🔒':lv.icon)+'</div>'
+          +   '<div class="lv-zh">第 '+lv.id+' 关 · '+lv.zh+'</div>'
+          +   '<div class="lv-en">'+lv.en+'</div>'
+          +   '<div class="lv-desc">'+(locked?'先闯过前面的关卡就能解锁':'点击开始闯关')+'</div>'
+          +   '<div class="stars">'+starStr(G.stars[lv.id], 3)+'</div>'
+          + '</div>';
+  }
+  document.getElementById('map').innerHTML = html;
+}
+function resetAll(){
+  if(confirm('确定要清空所有星星和得分，重新开始吗？')){
+    G = { unlocked:1, stars:{1:0,2:0,3:0,4:0}, best:{1:0,2:0,3:0,4:0}, muted:G.muted };
+    save(); renderHome(); showToast('进度已重置');
+  }
+}
+
+/* =====================================================
+   关卡入口与规则演示
+===================================================== */
+var curLevel = 0;
+var STEP = null;
+function openLevel(id){
+  curLevel = id;
+  var lv = LEVELS[id-1];
+  document.getElementById('lvTitle').textContent = '第 '+id+' 关 · '+lv.zh;
+  document.getElementById('lvChipEn').textContent = lv.en;
+  document.getElementById('lvChipZh').textContent = lv.zh;
+  document.getElementById('lvScript').textContent = SCRIPTS[id];
+  renderLevel(id);
+  showView('view-level');
+}
+function renderLevel(id){
+  var r = RULES[id];
+  var html = '';
+  if(r){
+    var parts = '';
+    for(var i=0;i<r.expr.length;i++){
+      parts += '<span class="'+r.expr[i].cls+'">'+r.expr[i].t+'</span>';
+    }
+    html += '<div class="rule-card">'
+          +   '<div class="rule-tag">🧭 运算规则 · Rule</div>'
+          +   '<p class="rule-text">'+r.rule+'</p>'
+          +   '<div class="expr card">'+parts+'</div>'
+          +   '<div class="footer-actions"><button class="btn" id="stepBtn" onclick="nextStep()">▶ 点我看运算顺序</button></div>'
+          +   '<div class="steps" id="stepBox" style="display:none"></div>'
+          + '</div>';
+    STEP = { i:0, r:r };
+  } else {
+    html += '<div class="rule-card">'
+          +   '<div class="rule-tag">🏆 综合挑战 · Grand Challenge</div>'
+          +   '<p class="rule-text">三条规则都学会啦！这一关把「同级运算」「两级运算」「带括号」和生活中的小问题混在一起，60 秒冲高分！</p>'
+          + '</div>';
+  }
+  html += '<div class="footer-actions"><button class="btn primary" onclick="startChallenge(\'l'+id+'\')">🚀 开始挑战</button></div>';
+  document.getElementById('levelBody').innerHTML = html;
+}
+function nextStep(){
+  if(!STEP){ return; }
+  var s = STEP.r.steps[STEP.i];
+  if(!s){ return; }
+  var box = document.getElementById('stepBox');
+  box.style.display = '';
+  var div = document.createElement('div');
+  div.className = 'step';
+  div.innerHTML = '<span class="step-tag">'+s.label+'</span>'+s.txt;
+  box.appendChild(div);
+  STEP.i++;
+  var btn = document.getElementById('stepBtn');
+  if(STEP.i >= STEP.r.steps.length){
+    btn.textContent = '🎯 答案：' + STEP.r.ans;
+    btn.disabled = true;
+    sfx(true);
+  }
+}
+
+/* =====================================================
+   挑战引擎（限时计分）
+===================================================== */
+var MODE_META = {
+  l1:{ title:'同级运算小练习', en:'Mini Quiz', zh:'4 题热身', timed:false, level:1, retry:'再练一次', qs:4 },
+  l2:{ title:'两级运算挑战', en:'Two-Level Quiz', zh:'60 秒冲关', timed:true, level:2, retry:'再挑战一次', qs:8 },
+  l3:{ title:'括号魔法挑战', en:'Parenth. Quiz', zh:'60 秒冲关', timed:true, level:3, retry:'再挑战一次', qs:8 },
+  l4:{ title:'综合大挑战', en:'Grand Quiz', zh:'60 秒综合', timed:true, level:4, retry:'再挑战一次', qs:10 }
+};
+var Q = null;
+function startChallenge(mode){
+  stopTimer();
+  var meta = MODE_META[mode];
+  Q = { mode:mode, bank:[], i:0, score:0, answered:false, timer:null, timeLeft:60, timed:meta.timed };
+  if(mode==='l1'){ Q.bank = buildL1Bank(); }
+  if(mode==='l2'){ Q.bank = buildL2Bank(); }
+  if(mode==='l3'){ Q.bank = buildL3Bank(); }
+  if(mode==='l4'){ Q.bank = buildL4Bank(); }
+  document.getElementById('qzTitle').textContent = meta.title;
+  document.getElementById('qzChipEn').textContent = meta.en;
+  document.getElementById('qzChipZh').textContent = meta.zh;
+  document.getElementById('quizTimer').style.display = meta.timed ? '' : 'none';
+  showView('view-quiz');
+  if(Q.timed){ startTimer(); }
+  renderQ();
+}
+function startTimer(){
+  stopTimer();
+  Q.timeLeft = 60;
+  document.getElementById('quizTimer').textContent = 60;
+  document.getElementById('quizTimer').classList.remove('danger');
+  Q.timer = setInterval(function(){
+    Q.timeLeft--;
+    var el = document.getElementById('quizTimer');
+    el.textContent = Q.timeLeft;
+    if(Q.timeLeft <= 10){
+      el.classList.add('danger');
+      tick();
+    }
+    if(Q.timeLeft <= 0){
+      stopTimer();
+      finishQuiz();
+    }
+  }, 1000);
+}
+function stopTimer(){
+  if(Q && Q.timer){ clearInterval(Q.timer); Q.timer = null; }
+}
+function quitQuiz(){
+  if(confirm('确定要退出挑战吗？本次成绩不保存。')){
+    goHome();
+  }
+}
+function toggleHint(btn){
+  var box = document.getElementById('hintBox');
+  if(!box){ return; }
+  var open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : '';
+  btn.textContent = open ? '💡 提示' : '🙈 收起提示';
+}
+function renderQ(){
+  if(!Q){ return; }
+  Q.answered = false;
+  document.getElementById('quizProg').textContent = '第 '+(Q.i+1)+' / '+Q.bank.length+' 题';
+  document.getElementById('quizScore').textContent = Q.score;
+  document.getElementById('quizFb').innerHTML = '';
+  document.getElementById('quizNext').style.display = 'none';
+  var item = Q.bank[Q.i];
+  var body = '';
+  if(item.type === 'calc'){
+    body += '<div class="q-text">算一算，选一选：</div>'
+          + '<div class="q-expr">'+exprHTML(item.text)+'</div>'
+          + '<div class="hint-row"><button class="btn small" onclick="toggleHint(this)">💡 提示</button></div>'
+          + '<div class="hint-box" id="hintBox">'+item.hint+'</div>'
+          + '<div class="opts">';
+    for(var j=0;j<item.opts.length;j++){
+      body += '<button class="opt" data-v="'+j+'" onclick="answerSingle('+j+')">'+item.opts[j]+'</button>';
+    }
+    body += '</div>';
+  } else if(item.type === 'judge'){
+    body += '<div class="q-text">对还是错？</div>'
+          + '<div class="q-sub">'+item.q+'</div>'
+          + '<div class="opts">'
+          +   '<button class="opt" data-v="1" onclick="answerJudge(1)">✅ 对</button>'
+          +   '<button class="opt" data-v="0" onclick="answerJudge(0)">❌ 错</button>'
+          + '</div>';
+  } else if(item.type === 'story'){
+    body += '<div class="story-card"><span class="scene">'+item.scene+'</span>'+item.text+'</div>'
+          + '<div class="q-sub">先想一想运算顺序，再选出答案</div>'
+          + '<div class="opts">';
+    for(var s=0;s<item.opts.length;s++){
+      body += '<button class="opt" data-v="'+s+'" onclick="answerSingle('+s+')">'+item.opts[s]+'</button>';
+    }
+    body += '</div>';
+  } else if(item.type === 'formula'){
+    body += '<div class="story-card"><span class="scene">'+item.scene+'</span>'+item.text+'</div>'
+          + '<div class="q-sub">选出正确的综合算式</div>'
+          + '<div class="opts">';
+    for(var f=0;f<item.opts.length;f++){
+      body += '<button class="opt fml" data-v="'+f+'" onclick="answerSingle('+f+')">'+item.opts[f]+'</button>';
+    }
+    body += '</div>';
+  }
+  document.getElementById('quizBody').innerHTML = body;
+}
+function grade(ok, ex){
+  Q.answered = true;
+  Q.score = Math.max(0, Q.score + (ok ? 10 : -5));
+  document.getElementById('quizScore').textContent = Q.score;
+  sfx(ok);
+  document.getElementById('quizFb').innerHTML =
+      '<div class="fb '+(ok?'ok':'bad')+'" style="margin-top:16px">'
+    + (ok ? '🎉 答对啦！+10 分' : '💪 答错啦，−5 分') + '　' + ex + '</div>';
+  var nx = document.getElementById('quizNext');
+  nx.textContent = (Q.i === Q.bank.length-1) ? '看成绩 →' : '下一题 →';
+  nx.style.display = '';
+  if(ok){ speak('答对啦！'); }else{ speak('答错啦，' + ex); }
+}
+function answerSingle(j){
+  if(!Q || Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var ok = (j === item.a);
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var v = parseInt(opts[k].getAttribute('data-v'),10);
+    if(v === item.a){ opts[k].classList.add('ok'); }
+    else if(v === j){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, item.ex);
+}
+function answerJudge(v){
+  if(!Q || Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var ok = (v === (item.a ? 1 : 0));
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var vv = parseInt(opts[k].getAttribute('data-v'),10);
+    if(vv === (item.a?1:0)){ opts[k].classList.add('ok'); }
+    else if(vv === v){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, item.ex);
+}
+function nextQ(){
+  if(!Q){ return; }
+  Q.i++;
+  if(Q.i >= Q.bank.length){ finishQuiz(); } else { renderQ(); }
+}
+
+/* =====================================================
+   结算
+===================================================== */
+function finishQuiz(){
+  stopTimer();
+  var meta = MODE_META[Q.mode];
+  var bonus = Q.timed ? Q.timeLeft * 2 : 0;
+  var sc = Q.score + bonus;
+  var maxSc = meta.qs * 10 + (Q.timed ? 120 : 0);
+  var st = sc >= 0.75*maxSc ? 3 : (sc >= 0.5*maxSc ? 2 : (sc >= 0.25*maxSc ? 1 : 0));
+  G.stars[meta.level] = Math.max(G.stars[meta.level], st);
+  G.best[meta.level] = Math.max(G.best[meta.level], sc);
+  var newUnlock = false;
+  if(st >= 1 && meta.level < 4){
+    var old = G.unlocked;
+    G.unlocked = Math.max(G.unlocked, meta.level + 1);
+    if(G.unlocked > old){ newUnlock = true; }
+  }
+  save();
+  document.getElementById('rScore').textContent = sc;
+  document.getElementById('rStars').innerHTML = starStr(st, 3);
+  var msg;
+  if(st === 3){ msg = '太棒了！你就是混合运算小达人！🏆'; }
+  else if(st === 2){ msg = '真不错！再练一练就能拿满分！'; }
+  else if(st === 1){ msg = '有进步！回去看看规则，下次更高分！'; }
+  else{ msg = '没关系，回到规则卡再学一学，一定行！'; }
+  if(bonus > 0){ msg += '（含时间奖励 +'+bonus+' 分）'; }
+  if(newUnlock){ msg += '　🎉 新关卡解锁啦！'; }
+  document.getElementById('rMsg').textContent = msg;
+  document.getElementById('rRetry').textContent = meta.retry;
+  var conf = document.getElementById('confetti');
+  var emos = ['🎉','🎊','⭐','✨','🧮','➕','➖','✖️','➗','🌈'];
+  var ch = '';
+  for(var ci=0; ci<16; ci++){
+    ch += '<span style="left:'+(6+Math.random()*88).toFixed(1)+'%;font-size:'+(20+Math.random()*26).toFixed(1)+'px;'
+        + 'animation-duration:'+(2.2+Math.random()*2.2).toFixed(2)+'s;animation-delay:'+(Math.random()*0.8).toFixed(2)+'s">'
+        + emos[ci%emos.length]+'</span>';
+  }
+  conf.innerHTML = ch;
+  showView('view-result');
+  if(st > 0){ sfx(true); }
+}
+function retryChallenge(){
+  if(Q){ startChallenge(Q.mode); }
+}
+
+/* =====================================================
+   键盘支持（1-4 选答案，Enter 下一题）
+===================================================== */
+document.addEventListener('keydown', function(e){
+  var qz = document.getElementById('view-quiz');
+  if(!qz || qz.style.display === 'none' || !Q){ return; }
+  if(Q.answered){
+    if(e.key === 'Enter'){
+      var nx = document.getElementById('quizNext');
+      if(nx && nx.style.display !== 'none'){ nextQ(); }
+    }
+    return;
+  }
+  if(e.key >= '1' && e.key <= '4'){
+    var opts = document.querySelectorAll('#quizBody .opt');
+    var idx = parseInt(e.key, 10) - 1;
+    if(opts[idx]){ opts[idx].click(); }
+  }
+});
+
+/* =====================================================
+   启动
+===================================================== */
+load();
+document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+renderHome();
+showView('view-home');
+if('speechSynthesis' in window){
+  speechSynthesis.getVoices();
+  if(speechSynthesis.onvoiceschanged !== undefined){
+    speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); };
+  }
+}
+</script>
+</body>
+</html>

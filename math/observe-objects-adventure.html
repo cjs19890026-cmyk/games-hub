@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>观察物体大冒险 Observing Objects Adventure</title>
+<style>
+  :root{
+    --ink:#333333;      /* 正文黑字 */
+    --title:#111111;    /* 标题黑 */
+    --en:#2c3e9b;       /* EN 蓝 */
+    --zh:#c44569;       /* ZH 粉 */
+    --hl:#ff8f3f;       /* 高亮橙 */
+    --line:#333333;
+    --star:#f5b301;     /* 星星金 */
+    --ok:#2e9e5b;       /* 答对绿 */
+    --bad:#d64550;      /* 答错红 */
+    --card:#ffffff;     /* 控件白底 */
+    --page:#fdfbf7;
+
+    --pink:#ff8fb2;   --pink-soft:#ffe3ec;
+    --orange:#ff9f5a; --orange-soft:#ffe7d1;
+    --green:#45c486;  --green-soft:#d9f5e7;
+    --purple:#8f7bf0; --purple-soft:#e6e0fd;
+    --blue:#4f9dff;   --blue-soft:#dcebff;
+    --lemon:#ffd54f;  --lemon-soft:#fff3c9;
+    --aqua:#43d4e6;
+    --btn-shadow:#ffc6d8;
+    --btn-shadow-blue:#b9d0ff;
+    --card-shadow:#e6dfd2;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(#ffffff 1.6px, transparent 1.6px) 0 0 / 26px 26px,
+      linear-gradient(180deg,#7ecdf6 0%,#b4e6fb 38%,#e9f8ff 62%,#fff3d6 100%);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:20px; line-height:1.6;
+  }
+  :focus-visible{ outline:3px solid var(--blue); outline-offset:3px; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 64px; position:relative; z-index:1; }
+
+  /* ---------- 卡通天空背景装饰 ---------- */
+  .bg-deco{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .bg-deco span{ position:absolute; display:block; line-height:1; user-select:none; }
+  .d-sun{ top:22px; left:3%; font-size:86px; filter:drop-shadow(0 8px 12px rgba(255,175,40,.45)); animation:sunPulse 6s ease-in-out infinite; }
+  .d-cloud{ font-size:96px; opacity:.92; filter:drop-shadow(0 8px 12px rgba(70,140,190,.25)); animation:sway 9s ease-in-out infinite; }
+  .c1{ top:52px; right:6%; }
+  .c2{ top:225px; left:4%; font-size:64px; opacity:.85; animation-delay:1.2s; }
+  .c3{ top:46%; right:3%; font-size:58px; opacity:.8; animation-delay:2.3s; }
+  .d-mag{ top:18%; left:38%; font-size:46px; animation:bob 4.8s ease-in-out infinite; }
+  .d-eye{ top:30%; right:12%; font-size:44px; animation:twinkle 3.2s ease-in-out infinite; }
+  .d-balloon{ font-size:52px; animation:bob 4.6s ease-in-out infinite; filter:drop-shadow(0 6px 8px rgba(0,0,0,.14)); }
+  .b1{ top:44%; left:2%; animation-delay:.5s; }
+  .b2{ top:58%; right:5%; font-size:42px; animation-delay:1.3s; }
+  .d-star{ font-size:34px; animation:twinkle 3s ease-in-out infinite; }
+  .s1{ top:31%; right:17%; animation-delay:.4s; }
+  .s2{ top:52%; left:11%; font-size:26px; animation-delay:1s; }
+  .s3{ top:14%; left:58%; font-size:24px; animation-delay:1.7s; }
+  .d-camera{ bottom:26px; right:6%; font-size:54px; animation:bob 5s ease-in-out infinite; }
+  .d-hill{ position:absolute; bottom:-70px; left:-6%; width:62%; height:230px; background:linear-gradient(180deg,#7ce0b8,#4fc58e); border-radius:50% 50% 0 0 / 100% 100% 0 0; opacity:.5; }
+  .h2{ left:44%; width:70%; height:270px; background:linear-gradient(180deg,#9be8c8,#64d6a2); opacity:.38; }
+
+  @keyframes sunPulse{ 0%,100%{ transform:scale(1) rotate(0deg);} 50%{ transform:scale(1.07) rotate(5deg);} }
+  @keyframes sway{ 0%,100%{ transform:translateX(-12px);} 50%{ transform:translateX(12px);} }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-15px) rotate(2deg);} }
+  @keyframes twinkle{ 0%,100%{ opacity:.45; transform:scale(.9);} 50%{ opacity:1; transform:scale(1.18);} }
+  @keyframes confFall{ 0%{ transform:translateY(-40px) rotate(0deg); opacity:1;} 100%{ transform:translateY(600px) rotate(300deg); opacity:.1; } }
+  @keyframes cardIn{ 0%{ opacity:0; transform:translateY(16px) scale(.97);} 100%{ opacity:1; transform:none; } }
+  @keyframes spinX{ 0%{ transform:scaleX(1);} 50%{ transform:scaleX(.22);} 100%{ transform:scaleX(1);} }
+  @keyframes blinkRed{ 0%,100%{ opacity:1;} 50%{ opacity:.35;} }
+
+  /* ---------- 通用控件（全部白底黑字，不透明） ---------- */
+  .btn{
+    background:var(--card); color:var(--ink);
+    border:3px solid var(--ink); border-radius:18px;
+    padding:18px 28px; font-size:26px; font-weight:700;
+    cursor:pointer; user-select:none; touch-action:manipulation;
+    box-shadow:0 5px 0 var(--btn-shadow);
+    transition:transform .12s, box-shadow .12s, background-color .15s, color .15s;
+  }
+  .btn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .btn:disabled{ background:#eeeeee; color:#999999; border-color:#bbbbbb; box-shadow:0 4px 0 #dddddd; cursor:not-allowed; }
+  .btn.primary{ border-color:var(--en); color:var(--en); box-shadow:0 5px 0 var(--btn-shadow-blue); }
+  .btn.primary:hover:not(:disabled){ box-shadow:0 7px 0 var(--btn-shadow-blue); }
+  .btn.primary:active{ box-shadow:0 1px 0 var(--btn-shadow-blue); }
+  .btn.small{ font-size:20px; padding:10px 18px; border-radius:14px; box-shadow:0 4px 0 var(--btn-shadow); }
+  .btn.small:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--btn-shadow); }
+
+  .card{
+    background:var(--card); border:3px solid var(--ink);
+    border-radius:22px; padding:22px; box-shadow:0 5px 0 var(--card-shadow);
+  }
+  .en{ color:var(--en); }
+  .zh{ color:var(--zh); }
+
+  /* ---------- 首页 ---------- */
+  .home-title{ font-size:54px; font-weight:900; color:var(--title); margin:14px 0 4px; text-align:center; letter-spacing:2px; text-wrap:balance; }
+  .home-title .t-emoji{ display:inline-block; font-size:.68em; vertical-align:middle; animation:bob 4s ease-in-out infinite; }
+  .home-title .t-emoji.e2{ animation-delay:1.1s; }
+  .home-under{ display:block; width:min(340px,72%); height:14px; margin:10px auto 8px; }
+  .home-sub{ font-size:24px; color:var(--title); text-align:center; margin:0 0 8px; font-weight:700; }
+  .home-tip{ text-align:center; margin:0 0 26px; }
+  .map{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
+  .level-card{ text-align:center; cursor:pointer; border-color:var(--lv); box-shadow:0 6px 0 var(--lv-shadow); animation:cardIn .45s both; transition:transform .15s, box-shadow .15s; }
+  .level-card:nth-child(2){ animation-delay:.06s; }
+  .level-card:nth-child(3){ animation-delay:.12s; }
+  .level-card:nth-child(4){ animation-delay:.18s; }
+  .level-card:hover{ transform:translateY(-4px); box-shadow:0 10px 0 var(--lv-shadow); }
+  .level-card:hover .icon{ transform:rotate(-8deg) scale(1.08); }
+  .level-card:active{ transform:translateY(0); box-shadow:0 2px 0 var(--lv-shadow); }
+  .lv1{ --lv:var(--pink);   --lv-shadow:#ffc9d9; }
+  .lv2{ --lv:var(--blue);   --lv-shadow:#b9d0ff; }
+  .lv3{ --lv:var(--green);  --lv-shadow:#bcead3; }
+  .lv4{ --lv:var(--purple); --lv-shadow:#cfc5f8; }
+  .level-card .icon{
+    width:86px; height:86px; margin:0 auto 6px; font-size:48px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--lv-soft,#ffe3ec); border:3px solid var(--lv); border-radius:24px;
+    box-shadow:inset 0 -5px 0 rgba(0,0,0,.05); transition:transform .18s;
+  }
+  .lv1 .icon{ background:var(--pink-soft); }
+  .lv2 .icon{ background:var(--blue-soft); }
+  .lv3 .icon{ background:var(--green-soft); }
+  .lv4 .icon{ background:var(--purple-soft); }
+  .level-card .lv-zh{ font-size:30px; font-weight:900; color:var(--zh); margin-top:6px; }
+  .level-card .lv-en{ font-size:18px; font-weight:700; color:var(--en); letter-spacing:.5px; }
+  .level-card .lv-desc{ font-size:18px; color:var(--ink); margin-top:8px; }
+  .level-card .stars{ font-size:30px; margin-top:10px; letter-spacing:4px; }
+  .level-card.locked{ background:#f0f0f0; border-color:#aaaaaa; box-shadow:0 5px 0 #dddddd; cursor:not-allowed; animation:none; }
+  .level-card.locked .icon{ background:#e6e6e6; border-color:#aaaaaa; filter:grayscale(1); }
+  .level-card.locked .lv-zh,.level-card.locked .lv-desc{ color:#888888; }
+  .level-card .new-tag{ display:inline-block; background:var(--zh); color:#fff; font-size:14px; font-weight:800; border-radius:999px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .home-foot{ text-align:center; margin-top:30px; }
+
+  /* ---------- 关卡页 ---------- */
+  .bar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .bar h2{ font-size:36px; font-weight:900; color:var(--title); margin:0; }
+  .chip{ display:inline-block; font-size:16px; font-weight:800; padding:4px 14px; border:none; border-radius:999px; vertical-align:middle; color:#fff; letter-spacing:.5px; }
+  .chip.en{ background:var(--en); }
+  .chip.zh{ background:var(--zh); }
+
+  .tip-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; margin:14px 0 22px; }
+  .script-card{
+    background:var(--card); border:3px solid var(--ink); border-left:14px solid var(--zh);
+    border-radius:16px; padding:16px 20px; width:100%; box-shadow:0 5px 0 #ffd2e0;
+  }
+  .script-card .tag{ font-weight:900; font-size:18px; margin-bottom:6px; }
+  .script-card p{ margin:0; font-size:22px; text-align:center; }
+
+  .hint{ font-size:20px; font-weight:700; margin:6px 0 14px; text-align:center; }
+  .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:center; margin-bottom:16px; }
+  .tog.on{ background:#eef1fb; border-color:var(--en); color:var(--en); box-shadow:0 5px 0 var(--btn-shadow-blue); }
+  .tog.on:active{ box-shadow:0 1px 0 var(--btn-shadow-blue); }
+  .stage{ display:flex; gap:28px; flex-wrap:wrap; align-items:center; justify-content:center; margin:8px 0 18px; }
+  .shape-box{ background:var(--card); border:3px solid var(--blue); border-radius:22px; padding:18px; box-shadow:0 5px 0 #cfe6fb; text-align:center; }
+  .shape-svg{ display:block; width:min(300px,72vw); height:auto; margin:0 auto; }
+  .shape-svg.wide{ width:min(620px,88vw); }
+  .shape-svg.mini{ width:min(150px,34vw); }
+  .shape-svg.small{ width:min(100px,22vw); }
+
+  .scene-svg{ display:block; width:100%; height:auto; }
+  .kid{ cursor:pointer; }
+  .kid circle{ fill:var(--card); stroke:var(--line); stroke-width:3; transition:fill .15s; }
+  .kid:hover circle{ fill:var(--pink-soft); }
+  .kid.sel circle{ fill:var(--pink-soft); stroke:var(--zh); stroke-width:4; }
+  .kid text{ pointer-events:none; user-select:none; }
+
+  .view-card{ text-align:center; min-width:250px; }
+  .view-card .vlabel{ font-size:22px; font-weight:800; margin-top:10px; }
+  .view-card .vexp{ font-size:18px; font-weight:600; color:var(--ink); margin-top:6px; }
+
+  .spin{ animation:spinX .5s ease-in-out; }
+
+  .build-grid{ display:inline-grid; gap:6px; margin:10px auto; }
+  .bcell{
+    width:64px; height:64px; border:3px solid var(--ink); border-radius:14px;
+    background:var(--card); cursor:pointer; font-size:26px; font-weight:900;
+    display:flex; align-items:center; justify-content:center; transition:transform .1s, box-shadow .1s;
+    box-shadow:0 4px 0 var(--card-shadow);
+  }
+  .bcell:hover:not(:disabled){ transform:translateY(-2px); }
+  .bcell:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--card-shadow); }
+  .bcell.c1{ background:var(--blue); color:#fff; }
+  .bcell.c2{ background:var(--purple); color:#fff; }
+  .grid-svg{ display:block; width:min(170px,30vw); height:auto; margin:0 auto; }
+
+  /* ---------- 测验 ---------- */
+  .quiz-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .quiz-head .stat{ font-size:22px; font-weight:800; }
+  .timer{ font-variant-numeric:tabular-nums; }
+  .timer.danger{ color:var(--bad); animation:blinkRed .55s steps(2) infinite; }
+  .opts{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:18px auto 0; max-width:780px; }
+  .opt{
+    background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:18px;
+    padding:16px 12px; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 5px 0 var(--btn-shadow);
+    display:flex; align-items:center; justify-content:center; min-height:86px; user-select:none;
+    flex:1 1 150px; max-width:250px; transition:transform .12s, box-shadow .12s;
+  }
+  .opt:hover:not(.ok):not(.bad){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .opt:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .opt.ok{ background:#e7f6ec; border-color:var(--ok); }
+  .opt.bad{ background:#fdecea; border-color:var(--bad); }
+  .q-text{ font-size:30px; font-weight:900; color:var(--title); margin:8px 0 4px; text-align:center; }
+  .q-sub{ font-size:20px; font-weight:700; color:var(--ink); text-align:center; margin:2px 0 8px; }
+
+  .multi-opts{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:16px auto 0; max-width:780px; }
+  .mopt{
+    background:var(--card); border:3px solid var(--ink); border-radius:18px; padding:14px 10px;
+    cursor:pointer; text-align:center; min-width:120px; flex:1 1 130px; max-width:190px;
+    box-shadow:0 5px 0 var(--btn-shadow); transition:transform .12s, box-shadow .12s, background-color .15s;
+  }
+  .mopt:hover{ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .mopt .mname{ font-size:22px; font-weight:900; color:var(--ink); margin-top:6px; }
+  .mopt.sel{ background:var(--purple-soft); border-color:var(--purple); }
+  .mopt.ok{ background:#e7f6ec; border-color:var(--ok); }
+  .mopt.bad{ background:#fdecea; border-color:var(--bad); }
+
+  .fb{ font-size:24px; font-weight:800; margin-top:14px; padding:14px 18px; border-radius:16px; border:3px solid transparent; text-align:center; }
+  .fb.ok{ background:#e7f6ec; border-color:var(--ok); color:var(--ok); }
+  .fb.bad{ background:#fdecea; border-color:var(--bad); color:var(--bad); }
+  .fb.plain{ background:#f6f3ea; border-color:#cfc8b8; color:var(--ink); }
+
+  /* ---------- 结果页 ---------- */
+  .result{ text-align:center; padding-top:24px; position:relative; }
+  .result .big-score{ font-size:88px; font-weight:900; color:var(--title); line-height:1.1; }
+  @supports ((-webkit-background-clip:text) or (background-clip:text)){
+    .result .big-score{
+      background:linear-gradient(90deg,var(--en),var(--purple),var(--zh),var(--orange));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+  }
+  .result .big-stars{ font-size:64px; letter-spacing:8px; margin:10px 0; }
+  .result .msg{ font-size:28px; font-weight:800; margin:12px 0 26px; }
+  #confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  #confetti span{ position:absolute; top:-40px; animation:confFall linear both; }
+  .footer-actions{ text-align:center; margin-top:26px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  #toast{
+    position:fixed; left:50%; bottom:40px; transform:translateX(-50%);
+    background:var(--card); color:var(--ink); border:3px solid var(--zh); border-radius:16px;
+    padding:14px 26px; font-size:22px; font-weight:800; box-shadow:0 5px 0 var(--btn-shadow);
+    display:none; z-index:99; max-width:92vw;
+  }
+  #muteBtn{ position:fixed; top:14px; right:14px; z-index:99; }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none!important; transition:none!important; }
+  }
+  @media (max-width:640px){
+    .home-title{ font-size:40px; }
+    .btn{ font-size:22px; padding:16px 20px; }
+    .q-text{ font-size:26px; }
+    .d-mag,.d-eye,.d-balloon,.d-star,.d-camera,.d-hill{ display:none; }
+    .d-sun{ font-size:56px; top:10px; }
+    .d-cloud{ font-size:56px; }
+    .bcell{ width:54px; height:54px; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-deco" aria-hidden="true">
+  <span class="d-sun">☀️</span>
+  <span class="d-cloud c1">☁️</span>
+  <span class="d-cloud c2">☁️</span>
+  <span class="d-cloud c3">☁️</span>
+  <span class="d-mag">🔍</span>
+  <span class="d-eye">👀</span>
+  <span class="d-balloon b1">🎈</span>
+  <span class="d-balloon b2">🎈</span>
+  <span class="d-star s1">⭐</span>
+  <span class="d-star s2">✨</span>
+  <span class="d-star s3">🌟</span>
+  <span class="d-camera">📷</span>
+  <span class="d-hill h1"></span>
+  <span class="d-hill h2"></span>
+</div>
+<button id="muteBtn" class="btn small" onclick="toggleMute()">🔊</button>
+<div id="toast"></div>
+
+<!-- ================= 首页：关卡地图 ================= -->
+<div id="view-home" class="wrap">
+  <h1 class="home-title"><span class="t-emoji">🔍</span> 观察物体大冒险 <span class="t-emoji e2">🌀</span></h1>
+  <svg class="home-under" viewBox="0 0 340 14" aria-hidden="true">
+    <defs>
+      <linearGradient id="underGrad" x1="0" x2="1">
+        <stop offset="0" stop-color="#4f9dff"/><stop offset=".5" stop-color="#ff8fb2"/><stop offset="1" stop-color="#ffd54f"/>
+      </linearGradient>
+    </defs>
+    <path d="M6 9 C 40 2, 70 12, 105 8 S 175 3, 215 9 S 290 3, 334 7" fill="none" stroke="url(#underGrad)" stroke-width="6" stroke-linecap="round"/>
+  </svg>
+  <p class="home-sub">Observing Objects · 三年级上册 第一单元</p>
+  <p class="home-tip"><span class="chip en">Teaching Tips</span> <span class="chip zh">教学提示</span></p>
+  <div class="tip-wrap" style="margin-top:0">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p>宝贝，今天我们来当“小小观察家”！同一个物体，从前面、后面、左面、右面、上面看，看到的样子可能不一样。先玩概念屋，再去 3D 实验台转一转、拼积木搭一搭，最后挑战侦探关，看看你的火眼金睛有多厉害！</p>
+    </div>
+  </div>
+  <div id="map" class="map"></div>
+  <div class="home-foot">
+    <button class="btn small" onclick="resetAll()">🗑 重置闯关进度</button>
+  </div>
+</div>
+
+<!-- ================= 关卡页（1/2/3 共用容器） ================= -->
+<div id="view-level" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="goHome()">← 返回地图</button>
+    <h2 id="lvTitle"></h2>
+    <span id="lvChipEn" class="chip en"></span>
+    <span id="lvChipZh" class="chip zh"></span>
+  </div>
+  <div class="tip-wrap">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p id="lvScript"></p>
+    </div>
+  </div>
+  <div id="levelBody"></div>
+</div>
+
+<!-- ================= 挑战页 ================= -->
+<div id="view-quiz" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="quitQuiz()">← 返回地图</button>
+    <h2 id="qzTitle">挑战</h2>
+    <span id="qzChipEn" class="chip en"></span>
+    <span id="qzChipZh" class="chip zh"></span>
+  </div>
+  <div class="quiz-head">
+    <div class="stat" id="quizProg"></div>
+    <div class="stat">当前得分：<span id="quizScore">0</span> 分</div>
+    <div class="stat">⏱ 剩余：<span id="quizTimer" class="timer">60</span> 秒</div>
+  </div>
+  <div class="card" id="quizBody"></div>
+  <div id="quizFb"></div>
+  <div class="footer-actions">
+    <button id="quizNext" class="btn primary" style="display:none" onclick="nextQ()">下一题 →</button>
+  </div>
+</div>
+
+<!-- ================= 结果页 ================= -->
+<div id="view-result" class="wrap" style="display:none">
+  <div class="result card">
+    <div id="confetti" aria-hidden="true"></div>
+    <h2 style="font-size:38px;color:var(--title);margin:0">挑战结束！</h2>
+    <div class="big-stars" id="rStars"></div>
+    <div class="big-score"><span id="rScore">0</span> 分</div>
+    <div class="msg" id="rMsg"></div>
+    <div class="footer-actions" style="margin-top:6px">
+      <button class="btn primary" id="rRetry" onclick="retryChallenge()">🔁 再挑战一次</button>
+      <button class="btn" onclick="goHome()">🏠 回到地图</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   数据区（全部内嵌，离线可用）
+===================================================== */
+var LEVELS = [
+  { id:1, icon:'🔍', zh:'概念屋', en:'Concept House', desc:'点一点方位，看看熊猫的不同样子' },
+  { id:2, icon:'🌀', zh:'3D 实验台', en:'3D Lab', desc:'转一转，看四种立体图形每个方向的样子' },
+  { id:3, icon:'🧱', zh:'拼积木', en:'Block Builder', desc:'搭积木，看前面、上面、左面的三视图' },
+  { id:4, icon:'🕵️', zh:'侦探挑战', en:'Detective', desc:'看见一面，猜一猜它是什么立体图形' }
+];
+
+var SCRIPTS = {
+  1:'宝贝，同一个玩具，站在前面、后面、左边、右边看，看到的样子可能不一样哦！先点一圈小朋友，看看熊猫每个方向的样子，再开始小练习。',
+  2:'正方体、长方体、圆柱、球，从不同方向看各有各的样子。先自由转一转、看个够，再开始挑战：答对 +10 分、答错 −5 分，剩的时间越多奖励越多！',
+  3:'用小正方体搭积木，再从前面、上面、左面看，把它们的样子画成方格图。先动手搭一搭，再挑战三视图！',
+  4:'只看到一个面，你能猜出它是什么立体图形吗？正方形面可能是正方体或长方体，圆形面可能是圆柱或球。60 秒综合大挑战，冲高分！'
+};
+
+var DIRS = [
+  { k:'front', zh:'前面', en:'Front', emoji:'👧' },
+  { k:'back',  zh:'后面', en:'Back',  emoji:'👦' },
+  { k:'left',  zh:'左面', en:'Left',  emoji:'🧒' },
+  { k:'right', zh:'右面', en:'Right', emoji:'👧' },
+  { k:'top',   zh:'上面', en:'Top',   emoji:'🐦' }
+];
+
+var SOLIDS = [
+  { k:'cube',     zh:'正方体', en:'Cube',      desc:'每个面都是正方形' },
+  { k:'cuboid',   zh:'长方体', en:'Cuboid',    desc:'六个面都是长方形（有的面是正方形）' },
+  { k:'cylinder', zh:'圆柱',   en:'Cylinder',  desc:'上下两个面是圆形' },
+  { k:'sphere',   zh:'球',     en:'Sphere',    desc:'从哪边看都是圆形' }
+];
+
+var SHAPES = [
+  { name:'一字形', cells:[{x:0,y:2,h:1},{x:1,y:2,h:1},{x:2,y:2,h:1},{x:3,y:2,h:1}] },
+  { name:'L 形', cells:[{x:0,y:1,h:1},{x:1,y:1,h:1},{x:2,y:1,h:1},{x:0,y:2,h:1}] },
+  { name:'田字形', cells:[{x:1,y:1,h:1},{x:2,y:1,h:1},{x:1,y:2,h:1},{x:2,y:2,h:1}] },
+  { name:'凸字形', cells:[{x:1,y:0,h:1},{x:0,y:1,h:1},{x:1,y:1,h:1},{x:2,y:1,h:1},{x:1,y:2,h:1}] },
+  { name:'阶梯形', cells:[{x:1,y:1,h:2},{x:1,y:2,h:1},{x:0,y:2,h:1}] }
+];
+
+var PANDA_TALK = {
+  front:'站在熊猫的前面，看到熊猫的脸，有两只圆圆的眼睛和一个小鼻子。',
+  back:'站在熊猫的后面，看不到脸，只能看到它的后脑勺和身体。',
+  left:'站在熊猫的左边，看到的是熊猫的侧面。',
+  right:'站在熊猫的右边，也看到熊猫的侧面，不过方向相反。',
+  top:'从上面往下看，只看到熊猫的头顶和两只耳朵。'
+};
+
+/* =====================================================
+   全局状态与存档
+===================================================== */
+var SAVE_KEY = 'observe-objects-adventure-v1';
+var G = { unlocked:1, stars:{1:0,2:0,3:0,4:0}, best:{1:0,2:0,3:0,4:0}, muted:false };
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }catch(e){}
+}
+function load(){
+  try{
+    var s = localStorage.getItem(SAVE_KEY);
+    if(s){ var o = JSON.parse(s);
+      G.unlocked = o.unlocked || 1;
+      G.muted = !!o.muted;
+      if(o.stars){ for(var k in G.stars){ G.stars[k] = o.stars[k] || 0; } }
+      if(o.best){ for(var k2 in G.best){ G.best[k2] = o.best[k2] || 0; } }
+    }
+  }catch(e){}
+}
+
+var curLevel = 0;
+var L1 = { seen:0, seenSet:{} };
+var L2 = { solid:'cube', dir:'front' };
+var L3 = { cells:{}, total:0 };
+var Q = { mode:'', bank:[], i:0, score:0, answered:false, timer:null, timeLeft:60, timed:false };
+
+/* =====================================================
+   工具
+===================================================== */
+function starStr(n, total){
+  var s = '';
+  for(var i=0;i<total;i++){ s += i<n ? '<span style="color:var(--star)">★</span>' : '<span style="color:#c9c2b2">☆</span>'; }
+  return s;
+}
+function shuffle(arr){
+  for(var i=arr.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+function shade(hex, f){
+  var n = parseInt(hex.slice(1), 16);
+  var r = n>>16, g = (n>>8)&255, b = n&255;
+  if(f >= 0){
+    r = Math.round(r + (255-r)*f); g = Math.round(g + (255-g)*f); b = Math.round(b + (255-b)*f);
+  }else{
+    r = Math.round(r * (1+f)); g = Math.round(g * (1+f)); b = Math.round(b * (1+f));
+  }
+  function h2(v){ var h = v.toString(16); return h.length<2 ? '0'+h : h; }
+  return '#'+h2(r)+h2(g)+h2(b);
+}
+function poly(pts, fill){
+  var d = 'M'+pts[0]+' '+pts[1];
+  for(var i=2;i<pts.length;i+=2){ d += ' L'+pts[i]+' '+pts[i+1]; }
+  d += ' Z';
+  return '<path d="'+d+'" fill="'+fill+'" stroke="#333" stroke-width="2.5" stroke-linejoin="round"/>';
+}
+
+/* =====================================================
+   立体图形：等距 3D 渲染（纯 SVG，离线）
+===================================================== */
+function isoShape(cells, unit, palette, cls){
+  if(!cells || !cells.length){ return '<svg viewBox="0 0 10 10" class="shape-svg '+(cls||'')+'"></svg>'; }
+  var u = unit || 40;
+  var pal = palette || ['#ffd54f','#ff8fb2','#7fb2ff','#5fd7a3','#c78aff','#ff9f5a','#4dd0e1'];
+  var items = [], pts = [];
+  cells.forEach(function(c){
+    for(var z=0;z<c.h;z++){ items.push({x:c.x, y:c.y, z:z, col:(c.col!==undefined?c.col:(c.x+c.y+z))}); }
+  });
+  function P(x,y,z){ return [ (x-y)*0.866*u, (x+y)*0.5*u - z*u ]; }
+  items.forEach(function(it){
+    var A=P(it.x,it.y,it.z), B=P(it.x+1,it.y,it.z), C=P(it.x+1,it.y+1,it.z), D=P(it.x,it.y+1,it.z);
+    var A2=P(it.x,it.y,it.z+1), B2=P(it.x+1,it.y,it.z+1), C2=P(it.x+1,it.y+1,it.z+1), D2=P(it.x,it.y+1,it.z+1);
+    pts = pts.concat(A,B,C,D,A2,B2,C2,D2);
+  });
+  var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for(var pi=0;pi<pts.length;pi+=2){
+    if(pts[pi]<minX)minX=pts[pi]; if(pts[pi]>maxX)maxX=pts[pi];
+    if(pts[pi+1]<minY)minY=pts[pi+1]; if(pts[pi+1]>maxY)maxY=pts[pi+1];
+  }
+  items.sort(function(p,q){ return (p.x+p.y)-(q.x+q.y) || p.z-q.z || p.x-q.x; });
+  var out = '';
+  items.forEach(function(it){
+    var base = pal[Math.abs(it.col) % pal.length];
+    var B=P(it.x+1,it.y,it.z), C=P(it.x+1,it.y+1,it.z), D=P(it.x,it.y+1,it.z);
+    var A2=P(it.x,it.y,it.z+1), B2=P(it.x+1,it.y,it.z+1), C2=P(it.x+1,it.y+1,it.z+1), D2=P(it.x,it.y+1,it.z+1);
+    out += poly([A2,B2,C2,D2], shade(base,0.12));   /* 顶面 */
+    out += poly([B,C,C2,B2], shade(base,-0.22));    /* 右面（+x 方向可见面） */
+    out += poly([D,C,C2,D2], shade(base,-0.42));    /* 左面（+y 方向可见面） */
+  });
+  var pad = u*0.6;
+  return '<svg viewBox="'+(minX-pad).toFixed(1)+' '+(minY-pad).toFixed(1)+' '+(maxX-minX+pad*2).toFixed(1)+' '+(maxY-minY+pad*2).toFixed(1)+'" class="shape-svg '+(cls||'')+'">'+out+'</svg>';
+}
+function cylinderSVG(cls){
+  return '<svg viewBox="0 0 160 190" class="shape-svg '+(cls||'')+'">'
+    + '<path d="M20 48 L20 158 A60 22 0 0 0 140 158 L140 48 Z" fill="#ffb84d" stroke="#333" stroke-width="3.5"/>'
+    + '<path d="M20 48 A60 22 0 0 0 140 48" fill="none" stroke="#333" stroke-width="3.5"/>'
+    + '<ellipse cx="80" cy="48" rx="60" ry="22" fill="#ffd54f" stroke="#333" stroke-width="3.5"/>'
+    + '<ellipse cx="80" cy="48" rx="38" ry="12" fill="none" stroke="#f0b53c" stroke-width="2"/>'
+    + '</svg>';
+}
+function sphereSVG(cls){
+  return '<svg viewBox="0 0 160 160" class="shape-svg '+(cls||'')+'">'
+    + '<defs><radialGradient id="sg" cx="35%" cy="30%" r="75%">'
+    + '<stop offset="0%" stop-color="#ffc3d6"/><stop offset="55%" stop-color="#ff8fb2"/><stop offset="100%" stop-color="#e86a97"/>'
+    + '</radialGradient></defs>'
+    + '<circle cx="80" cy="80" r="70" fill="url(#sg)" stroke="#333" stroke-width="3.5"/>'
+    + '<ellipse cx="62" cy="58" rx="20" ry="11" fill="#ffffff" opacity=".75"/>'
+    + '</svg>';
+}
+function solid3D(kind, cls){
+  if(kind==='cube'){ return isoShape([{x:0,y:0,h:1,col:0}], 46, cls?undefined:['#7fb2ff']); }
+  if(kind==='cuboid'){ return isoShape([{x:0,y:0,h:1,col:1},{x:1,y:0,h:1,col:1}], 42); }
+  if(kind==='cylinder'){ return cylinderSVG(cls); }
+  return sphereSVG(cls);
+}
+function solidMini(kind){
+  if(kind==='cube'){ return isoShape([{x:0,y:0,h:1,col:0}], 30, ['#7fb2ff'], 'small'); }
+  if(kind==='cuboid'){ return isoShape([{x:0,y:0,h:1,col:1},{x:1,y:0,h:1,col:1}], 26, undefined, 'small'); }
+  if(kind==='cylinder'){ return cylinderSVG('small'); }
+  return sphereSVG('small');
+}
+
+/* =====================================================
+   熊猫（概念屋主角）
+===================================================== */
+function pandaShapes(kind){
+  var inner = '';
+  var isSide = (kind==='side' || kind==='sideR');
+  if(kind==='sideR'){ inner += '<g transform="translate(160,0) scale(-1,1)">'; }
+  if(isSide){
+    /* 侧面：耳朵一前一后错开 */
+    inner += '<circle cx="62" cy="26" r="15" fill="#333" stroke="#333" stroke-width="3"/>';
+    inner += '<circle cx="98" cy="24" r="15" fill="#333" stroke="#333" stroke-width="3"/>';
+  }else{
+    inner += '<circle cx="44" cy="28" r="15" fill="#333" stroke="#333" stroke-width="3"/>';
+    inner += '<circle cx="116" cy="28" r="15" fill="#333" stroke="#333" stroke-width="3"/>';
+  }
+  inner += '<circle cx="80" cy="64" r="52" fill="#fff" stroke="#333" stroke-width="4"/>';
+  if(kind==='front'){
+    inner += '<circle cx="63" cy="60" r="7" fill="#333"/>';
+    inner += '<circle cx="97" cy="60" r="7" fill="#333"/>';
+    inner += '<ellipse cx="80" cy="80" rx="8" ry="6" fill="#333"/>';
+    inner += '<path d="M72 89 Q80 96 88 89" fill="none" stroke="#333" stroke-width="3.5" stroke-linecap="round"/>';
+  }
+  if(isSide){
+    /* 侧脸（朝右）：眼睛小而靠上，鼻子探出脸缘，嘴巴一条弧线 */
+    inner += '<circle cx="92" cy="54" r="6.5" fill="#333"/>';
+    inner += '<ellipse cx="124" cy="70" rx="10" ry="7.5" fill="#333"/>';
+    inner += '<path d="M123 79 Q119 87 109 87" fill="none" stroke="#333" stroke-width="3.5" stroke-linecap="round"/>';
+  }
+  if(kind==='top'){
+    inner += '<path d="M80 20 L80 108 M20 64 L140 64" stroke="#ddd" stroke-width="2" stroke-dasharray="6 6"/>';
+  }
+  inner += '<rect x="52" y="112" width="56" height="32" rx="14" fill="#fff" stroke="#333" stroke-width="4"/>';
+  if(kind==='front' || kind==='back'){
+    inner += '<ellipse cx="42" cy="126" rx="11" ry="17" fill="#333"/>';
+    inner += '<ellipse cx="118" cy="126" rx="11" ry="17" fill="#333"/>';
+  }else if(isSide){
+    /* 侧面：手臂在身体前侧 + 一只伸向前方的脚 */
+    inner += '<ellipse cx="98" cy="122" rx="11" ry="15" fill="#333"/>';
+    inner += '<ellipse cx="102" cy="141" rx="13" ry="7" fill="#333"/>';
+  }
+  if(kind==='sideR'){ inner += '</g>'; }
+  return inner;
+}
+function pandaSVG(kind, cls){
+  return '<svg viewBox="0 0 160 150" class="shape-svg '+(cls||'')+'">'+pandaShapes(kind)+'</svg>';
+}
+
+/* 概念屋场景 */
+function sceneSVG(){
+  var s = '<svg viewBox="0 0 640 380" class="scene-svg" role="img" aria-label="熊猫观察场景">';
+  s += '<rect x="0" y="300" width="640" height="80" fill="#bfe9b8" stroke="#333" stroke-width="3"/>';
+  s += '<rect x="240" y="240" width="160" height="14" rx="7" fill="#e3a86f" stroke="#333" stroke-width="3"/>';
+  s += '<rect x="250" y="254" width="14" height="46" fill="#c98a55" stroke="#333" stroke-width="3"/>';
+  s += '<rect x="376" y="254" width="14" height="46" fill="#c98a55" stroke="#333" stroke-width="3"/>';
+  s += '<g transform="translate(282,147) scale(0.62)">'+pandaShapes('front')+'</g>';
+  var kids = [
+    { d:'back',  x:320, y:95  },
+    { d:'left',  x:95,  y:235 },
+    { d:'right', x:545, y:235 },
+    { d:'front', x:320, y:335 }
+  ];
+  for(var i=0;i<kids.length;i++){
+    var kd = kids[i];
+    s += '<g class="kid" data-dir="'+kd.d+'" onclick="exploreL1(\''+kd.d+'\')">'
+       +   '<circle cx="'+kd.x+'" cy="'+(kd.y-14)+'" r="25"/>'
+       +   '<text x="'+kd.x+'" y="'+(kd.y-2)+'" text-anchor="middle" font-size="28">'+dirEmoji(kd.d)+'</text>'
+       +   '<text x="'+kd.x+'" y="'+(kd.y+26)+'" text-anchor="middle" font-size="16" font-weight="800" fill="#333">'+dirZh(kd.d)+'</text>'
+       + '</g>';
+  }
+  s += '<g class="kid" data-dir="top" onclick="exploreL1(\'top\')">'
+     +   '<circle cx="540" cy="70" r="25"/>'
+     +   '<text x="540" y="84" text-anchor="middle" font-size="26">🐦</text>'
+     +   '<text x="540" y="112" text-anchor="middle" font-size="16" font-weight="800" fill="#333">上面</text>'
+     + '</g>';
+  s += '</svg>';
+  return s;
+}
+function dirEmoji(d){
+  for(var i=0;i<DIRS.length;i++){ if(DIRS[i].k===d){ return DIRS[i].emoji; } }
+  return '❓';
+}
+function dirZh(d){
+  for(var i=0;i<DIRS.length;i++){ if(DIRS[i].k===d){ return DIRS[i].zh; } }
+  return '';
+}
+
+/* =====================================================
+   视图（2D 选项图）
+===================================================== */
+function viewSVG(v, cls){
+  if(v==='pandaFront'){ return pandaSVG('front', cls); }
+  if(v==='pandaBack'){ return pandaSVG('back', cls); }
+  if(v==='pandaSide'){ return pandaSVG('side', cls); }
+  if(v==='pandaSideR'){ return pandaSVG('sideR', cls); }
+  if(v==='pandaTop'){ return pandaSVG('top', cls); }
+  if(v==='square'){
+    return '<svg viewBox="0 0 120 120" class="shape-svg '+(cls||'mini')+'"><rect x="8" y="8" width="104" height="104" rx="6" fill="#7fb2ff" stroke="#333" stroke-width="5"/></svg>';
+  }
+  if(v==='rect'){
+    return '<svg viewBox="0 0 170 110" class="shape-svg '+(cls||'mini')+'"><rect x="8" y="8" width="154" height="94" rx="6" fill="#5fd7a3" stroke="#333" stroke-width="5"/></svg>';
+  }
+  if(v==='rectGrid'){
+    return '<svg viewBox="0 0 170 110" class="shape-svg '+(cls||'mini')+'"><rect x="8" y="8" width="154" height="94" rx="6" fill="#5fd7a3" stroke="#333" stroke-width="5"/><line x1="85" y1="8" x2="85" y2="102" stroke="#fff" stroke-width="4"/></svg>';
+  }
+  if(v==='circle'){
+    return '<svg viewBox="0 0 130 130" class="shape-svg '+(cls||'mini')+'"><circle cx="65" cy="65" r="55" fill="#ff8fb2" stroke="#333" stroke-width="5"/></svg>';
+  }
+  return '';
+}
+function viewForSolid(solid, dir){
+  if(solid==='cube'){ return 'square'; }
+  if(solid==='cuboid'){
+    if(dir==='top'){ return 'rectGrid'; }
+    if(dir==='left' || dir==='right'){ return 'square'; }
+    return 'rect';
+  }
+  if(solid==='cylinder'){ return dir==='top' ? 'circle' : 'rect'; }
+  return 'circle';
+}
+
+/* 方格纸视图（三视图） */
+function gridMat(cells, dir){
+  var g = {};
+  cells.forEach(function(c){ g[c.x+','+c.y] = c.h || 1; });
+  var x, y, r, row;
+  if(dir==='top'){
+    var m = [];
+    for(y=0;y<4;y++){ row=[]; for(x=0;x<5;x++){ row.push(g[x+','+y]||0); } m.push(row); }
+    return { w:5, h:4, mat:m };
+  }
+  if(dir==='front'){
+    var maxH = 0;
+    for(y=0;y<4;y++){ for(x=0;x<5;x++){ maxH = Math.max(maxH, g[x+','+y]||0); } }
+    var cols = [];
+    for(x=0;x<5;x++){ var hx=0; for(y=0;y<4;y++){ hx=Math.max(hx, g[x+','+y]||0); } cols.push(hx); }
+    var m2 = [];
+    for(r=0;r<maxH;r++){ row=[]; for(x=0;x<5;x++){ row.push(cols[x] > (maxH-1-r) ? 1 : 0); } m2.push(row); }
+    return { w:5, h:maxH, mat:m2 };
+  }
+  if(dir==='left'){
+    var maxH2 = 0;
+    for(y=0;y<4;y++){ for(x=0;x<5;x++){ maxH2 = Math.max(maxH2, g[x+','+y]||0); } }
+    var rowsH = [];
+    for(y=0;y<4;y++){ var hy=0; for(x=0;x<5;x++){ hy=Math.max(hy, g[x+','+y]||0); } rowsH.push(hy); }
+    var m3 = [];
+    for(r=0;r<maxH2;r++){ row=[]; for(y=0;y<4;y++){ row.push(rowsH[y] > (maxH2-1-r) ? 1 : 0); } m3.push(row); }
+    return { w:4, h:maxH2, mat:m3 };
+  }
+  return { w:1, h:1, mat:[[0]] };
+}
+function gridKeyOf(cells, dir){
+  var gm = gridMat(cells, dir);
+  var s = dir+':'+gm.w+'x'+gm.h+':';
+  for(var r=0;r<gm.mat.length;r++){ s += gm.mat[r].join(''); }
+  return s;
+}
+function gridSVGFromMat(w, h, mat, cls){
+  var size = 32;
+  var s = '';
+  for(var r=0;r<h;r++){
+    for(var c=0;c<w;c++){
+      var v = mat[r][c] || 0;
+      var fill = v===2 ? '#c78aff' : (v===1 ? '#4f9dff' : '#ffffff');
+      s += '<rect x="'+(c*size+2)+'" y="'+(r*size+2)+'" width="'+(size-4)+'" height="'+(size-4)+'" fill="'+fill+'" stroke="#999" stroke-width="1.5" rx="4"/>';
+      if(v===2){
+        s += '<text x="'+(c*size+size/2)+'" y="'+(r*size+size/2+9)+'" text-anchor="middle" font-size="17" font-weight="900" fill="#fff">2</text>';
+      }
+    }
+  }
+  return '<svg viewBox="0 0 '+(w*size+4)+' '+(h*size+4)+'" class="grid-svg '+(cls||'')+'">'+s+'</svg>';
+}
+function gridSVGKey(key, cls){
+  var parts = key.split(':');
+  var dim = parts[1].split('x');
+  var w = parseInt(dim[0],10), h = parseInt(dim[1],10);
+  var rowsStr = parts[2];
+  var mat = [];
+  for(var r=0;r<h;r++){
+    var row = [];
+    for(var c=0;c<w;c++){ row.push(parseInt(rowsStr.charAt(r*w+c),10)||0); }
+    mat.push(row);
+  }
+  return gridSVGFromMat(w, h, mat, cls);
+}
+
+/* 一面猜立体：面截图 */
+function faceSVG(face){
+  if(face==='square'){ return '<svg viewBox="0 0 130 130" class="shape-svg mini"><rect x="8" y="8" width="114" height="114" rx="6" fill="#8f7bf0" stroke="#333" stroke-width="5"/></svg>'; }
+  if(face==='rect'){ return '<svg viewBox="0 0 180 120" class="shape-svg mini"><rect x="8" y="8" width="164" height="104" rx="6" fill="#45c486" stroke="#333" stroke-width="5"/></svg>'; }
+  return '<svg viewBox="0 0 130 130" class="shape-svg mini"><circle cx="65" cy="65" r="55" fill="#ff8fb2" stroke="#333" stroke-width="5"/></svg>';
+}
+
+/* =====================================================
+   音效与语音（WebAudio + Web Speech，离线）
+===================================================== */
+var AC = null;
+function tone(freq, start, dur, type){
+  var o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, AC.currentTime + start);
+  g.gain.linearRampToValueAtTime(0.25, AC.currentTime + start + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + start + dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime + start); o.stop(AC.currentTime + start + dur + 0.05);
+}
+function sfx(ok){
+  if(G.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended'){ AC.resume(); }
+    if(ok){ tone(660, 0, 0.18); tone(880, 0.16, 0.3); }
+    else  { tone(220, 0, 0.28, 'sawtooth'); }
+  }catch(e){}
+}
+function tick(){
+  if(G.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended'){ AC.resume(); }
+    tone(880, 0, 0.05);
+  }catch(e){}
+}
+function speak(txt){
+  if(G.muted) return;
+  try{
+    if(!('speechSynthesis' in window)) return;
+    var u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'zh-CN'; u.rate = 0.95;
+    var vs = speechSynthesis.getVoices();
+    for(var i=0;i<vs.length;i++){
+      if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('zh')===0){ u.voice = vs[i]; break; }
+    }
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function toggleMute(){
+  G.muted = !G.muted; save();
+  document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+}
+
+/* =====================================================
+   视图切换 / 首页
+===================================================== */
+function showView(id){
+  var vs = ['view-home','view-level','view-quiz','view-result'];
+  for(var i=0;i<vs.length;i++){
+    document.getElementById(vs[i]).style.display = (vs[i]===id) ? '' : 'none';
+  }
+  window.scrollTo(0,0);
+}
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._tm); t._tm = setTimeout(function(){ t.style.display='none'; }, 2400);
+}
+function toggleTip(btn){
+  var card = btn.parentNode.querySelector('.script-card');
+  var open = card.style.display !== 'none';
+  card.style.display = open ? 'none' : '';
+  btn.textContent = open ? '💡 教学提示 ▾' : '收起提示 ▴';
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+  if(!open){ card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
+}
+function goHome(){
+  stopTimer();
+  renderHome(); showView('view-home'); curLevel = 0;
+}
+function renderHome(){
+  var html = '';
+  for(var i=0;i<LEVELS.length;i++){
+    var lv = LEVELS[i], locked = lv.id > G.unlocked;
+    html += '<div class="card level-card lv'+lv.id+(locked?' locked':'')+'" '+(locked?'':'onclick="openLevel('+lv.id+')"')+'>'
+          +   '<div class="icon">'+(locked?'🔒':lv.icon)+'</div>'
+          +   '<div class="lv-zh">第 '+lv.id+' 关 · '+lv.zh+'</div>'
+          +   '<div class="lv-en">'+lv.en+'</div>'
+          +   '<div class="lv-desc">'+(locked?'先闯过前面的关卡就能解锁':'点击开始闯关')+'</div>'
+          +   '<div class="stars">'+starStr(G.stars[lv.id], 3)+'</div>'
+          + '</div>';
+  }
+  document.getElementById('map').innerHTML = html;
+}
+function resetAll(){
+  if(confirm('确定要清空所有星星和得分，重新开始吗？')){
+    G = { unlocked:1, stars:{1:0,2:0,3:0,4:0}, best:{1:0,2:0,3:0,4:0}, muted:G.muted };
+    save(); renderHome(); showToast('进度已重置');
+  }
+}
+
+/* =====================================================
+   关卡入口
+===================================================== */
+function openLevel(id){
+  if(id === 4){ startChallenge('l4'); return; }
+  curLevel = id;
+  var lv = LEVELS[id-1];
+  document.getElementById('lvTitle').textContent = '第 '+id+' 关 · '+lv.zh;
+  document.getElementById('lvChipEn').textContent = lv.en;
+  document.getElementById('lvChipZh').textContent = lv.zh;
+  document.getElementById('lvScript').textContent = SCRIPTS[id];
+  if(id===1) renderL1();
+  if(id===2) renderL2();
+  if(id===3) renderL3();
+  showView('view-level');
+}
+
+/* =====================================================
+   第 1 关：概念屋
+===================================================== */
+function renderL1(){
+  L1 = { seen:0, seenSet:{} };
+  document.getElementById('levelBody').innerHTML =
+      '<p class="hint">① 点一个小朋友，看看从这个方向看到的熊猫 ② 看满 4 个方向，就可以开始小练习啦：</p>'
+    + '<div class="card" style="margin-bottom:16px">'+sceneSVG()+'</div>'
+    + '<div class="card view-card" id="l1view">'
+    +   '<div style="font-size:24px;font-weight:900;color:var(--title)">👀 点上方的小朋友开始观察</div>'
+    +   '<div id="l1viewBox" style="margin-top:10px"></div>'
+    + '</div>'
+    + '<div class="footer-actions">'
+    +   '<button class="btn primary" id="l1Start" disabled onclick="startChallenge(\'l1\')">🔍 开始小练习</button>'
+    + '</div>';
+}
+function exploreL1(dir){
+  var viewed = { front:'pandaFront', back:'pandaBack', left:'pandaSide', right:'pandaSideR', top:'pandaTop' };
+  var kids = document.querySelectorAll('.kid[data-dir]');
+  for(var i=0;i<kids.length;i++){
+    kids[i].classList.toggle('sel', kids[i].getAttribute('data-dir')===dir);
+  }
+  document.getElementById('l1viewBox').innerHTML =
+      viewSVG(viewed[dir], 'mini')
+    + '<div class="vlabel"><span class="zh">从'+dirZh(dir)+'看</span> · <span class="en">From the '+dirEn(dir)+'</span></div>'
+    + '<div class="vexp">'+PANDA_TALK[dir]+'</div>';
+  if(!L1.seenSet[dir]){
+    L1.seenSet[dir] = true;
+    L1.seen++;
+    if(L1.seen >= 4){
+      var b = document.getElementById('l1Start');
+      b.disabled = false;
+      showToast('🎉 方位收集够了，来个小练习吧！');
+      sfx(true);
+    }
+    if(L1.seen >= 5){
+      showToast('🌟 五个方位全部收集齐！');
+    }
+  }
+  speak(PANDA_TALK[dir]);
+}
+function dirEn(d){
+  for(var i=0;i<DIRS.length;i++){ if(DIRS[i].k===d){ return DIRS[i].en; } }
+  return '';
+}
+
+/* =====================================================
+   第 2 关：3D 实验台
+===================================================== */
+function renderL2(){
+  L2 = { solid:'cube', dir:'front' };
+  var solidBtns = '';
+  for(var i=0;i<SOLIDS.length;i++){
+    solidBtns += '<button class="btn tog'+(SOLIDS[i].k==='cube'?' on':'')+'" id="tgSolid'+i+'" onclick="setSolid2(\''+SOLIDS[i].k+'\')">'+SOLIDS[i].zh+'</button>';
+  }
+  var dirBtns = '';
+  for(var j=0;j<DIRS.length;j++){
+    dirBtns += '<button class="btn tog'+(DIRS[j].k==='front'?' on':'')+'" id="tgDir'+DIRS[j].k+'" onclick="setDir2(\''+DIRS[j].k+'\')">'+DIRS[j].zh+'</button>';
+  }
+  document.getElementById('levelBody').innerHTML =
+      '<p class="hint">① 选一个立体图形，② 点方位按钮转一转，看看每个方向的样子：</p>'
+    + '<div class="row">'+solidBtns+'</div>'
+    + '<div class="row">'+dirBtns+'</div>'
+    + '<div class="stage">'
+    +   '<div class="shape-box" id="l2stage"></div>'
+    +   '<div class="card view-card" id="l2view"></div>'
+    + '</div>'
+    + '<div class="footer-actions">'
+    +   '<button class="btn primary" onclick="startChallenge(\'l2\')">🚀 开始挑战</button>'
+    + '</div>';
+  renderStage2();
+}
+function setSolid2(k){
+  L2.solid = k;
+  for(var i=0;i<SOLIDS.length;i++){
+    var b = document.getElementById('tgSolid'+i);
+    if(b){ b.className = 'btn tog'+(SOLIDS[i].k===k?' on':''); }
+  }
+  renderStage2();
+}
+function setDir2(d){
+  L2.dir = d;
+  for(var i=0;i<DIRS.length;i++){
+    var b = document.getElementById('tgDir'+DIRS[i].k);
+    if(b){ b.className = 'btn tog'+(DIRS[i].k===d?' on':''); }
+  }
+  renderStage2();
+}
+function renderStage2(){
+  var stage = document.getElementById('l2stage');
+  if(!stage) return;
+  stage.innerHTML = '<div class="spin" style="display:inline-block">'+solid3D(L2.solid)+'</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--ink);margin-top:4px">'
+    + '<span class="zh">'+solidZh(L2.solid)+'</span> · <span class="en">'+solidEn(L2.solid)+'</span></div>';
+  var view = document.getElementById('l2view');
+  view.innerHTML = viewSVG(viewForSolid(L2.solid, L2.dir), 'mini')
+    + '<div class="vlabel">从<span class="zh">'+dirZh(L2.dir)+'</span>看 · <span class="en">'+dirEn(L2.dir)+'</span></div>'
+    + '<div class="vexp">'+solidDesc(L2.solid)+'</div>';
+  speak('从' + dirZh(L2.dir) + '看' + solidZh(L2.solid));
+}
+function solidZh(k){
+  for(var i=0;i<SOLIDS.length;i++){ if(SOLIDS[i].k===k){ return SOLIDS[i].zh; } }
+  return '';
+}
+function solidEn(k){
+  for(var i=0;i<SOLIDS.length;i++){ if(SOLIDS[i].k===k){ return SOLIDS[i].en; } }
+  return '';
+}
+function solidDesc(k){
+  for(var i=0;i<SOLIDS.length;i++){ if(SOLIDS[i].k===k){ return SOLIDS[i].desc; } }
+  return '';
+}
+
+/* =====================================================
+   第 3 关：拼积木
+===================================================== */
+function renderL3(){
+  L3 = { cells:{}, total:0, viewDir:'top' };
+  var grid = '<div class="build-grid" style="grid-template-columns:repeat(5,1fr)">';
+  for(var y=0;y<4;y++){
+    for(var x=0;x<5;x++){
+      grid += '<button class="bcell" id="bc'+x+'-'+y+'" onclick="toggleCell('+x+','+y+')"></button>';
+    }
+  }
+  grid += '</div>';
+  document.getElementById('levelBody').innerHTML =
+      '<p class="hint">① 点格子放积木（再点一下加高一层，再点收回）② 最多 5 块 ③ 搭好点「前面/上面/左面」看三视图：</p>'
+    + '<div class="row">'
+    +   '<button class="btn tog on" id="tgVtop" onclick="setL3View(\'top\')">上面 <span class="en">Top</span></button>'
+    +   '<button class="btn tog" id="tgVfront" onclick="setL3View(\'front\')">前面 <span class="en">Front</span></button>'
+    +   '<button class="btn tog" id="tgVleft" onclick="setL3View(\'left\')">左面 <span class="en">Left</span></button>'
+    + '</div>'
+    + '<div class="stage">'
+    +   '<div class="shape-box"><div id="l3preview">'+isoShape([], 40)+'</div><div style="font-size:18px;font-weight:700;margin-top:4px">3D 预览 · 已放 <b id="l3count">0</b> / 5 块</div></div>'
+    +   '<div class="card view-card"><div style="font-size:22px;font-weight:900;color:var(--title)">方格纸视图</div><div id="l3grid"></div></div>'
+    + '</div>'
+    + '<div class="row">'+grid+'</div>'
+    + '<div class="footer-actions">'
+    +   '<button class="btn" onclick="clearBuild()">🗑 清空</button>'
+    +   '<button class="btn primary" onclick="startChallenge(\'l3\')">🚀 开始挑战</button>'
+    + '</div>';
+  updateL3();
+}
+function cellsList(){
+  var out = [];
+  for(var k in L3.cells){ if(L3.cells[k] > 0){
+    var p = k.split(',');
+    out.push({ x:parseInt(p[0],10), y:parseInt(p[1],10), h:L3.cells[k] });
+  } }
+  return out;
+}
+function toggleCell(x, y){
+  var key = x+','+y;
+  var cur = L3.cells[key] || 0;
+  var next = (cur+1) % 3;
+  var total = L3.total - cur + next;
+  if(next > 0 && total > 5){ showToast('最多只能搭 5 块积木哦！'); sfx(false); return; }
+  L3.cells[key] = next;
+  L3.total = total;
+  sfx(true);
+  updateL3();
+}
+function clearBuild(){
+  L3 = { cells:{}, total:0, viewDir:L3.viewDir || 'top' };
+  updateL3();
+}
+function setL3View(d){
+  L3.viewDir = d;
+  var ids = { top:'tgVtop', front:'tgVfront', left:'tgVleft' };
+  for(var k in ids){
+    var b = document.getElementById(ids[k]);
+    if(b){ b.className = 'btn tog'+(k===d?' on':''); }
+  }
+  updateL3();
+}
+function updateL3(){
+  var list = cellsList();
+  for(var y=0;y<4;y++){
+    for(var x=0;x<5;x++){
+      var b = document.getElementById('bc'+x+'-'+y);
+      var v = L3.cells[x+','+y] || 0;
+      if(b){
+        b.className = 'bcell'+(v===1?' c1':(v===2?' c2':''));
+        b.textContent = v===2 ? '2' : (v===1 ? '🧱' : '');
+      }
+    }
+  }
+  document.getElementById('l3count').textContent = L3.total;
+  var preview = document.getElementById('l3preview');
+  if(preview){ preview.innerHTML = list.length ? isoShape(list, 34) : '<div style="height:120px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#a89f8c">先点下面的格子搭积木吧！</div>'; }
+  var gridEl = document.getElementById('l3grid');
+  if(gridEl){
+    var gm = gridMat(list, L3.viewDir || 'top');
+    gridEl.innerHTML = list.length ? gridSVGFromMat(gm.w, gm.h, gm.mat, 'mini') : '<div style="height:120px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#a89f8c">搭好积木后，这里显示视图</div>';
+  }
+}
+
+/* =====================================================
+   题库
+===================================================== */
+function buildL1Bank(){
+  var bank = [
+    { type:'panda', dir:'front', opts:['pandaFront','pandaSide','pandaBack'], a:0, ex:'站在前面，看到熊猫的脸、眼睛和鼻子。' },
+    { type:'panda', dir:'back', opts:['pandaSide','pandaBack','pandaFront'], a:1, ex:'站在后面看不到脸，只能看到后脑勺。' },
+    { type:'panda', dir:'left', opts:['pandaFront','pandaSide','pandaBack'], a:1, ex:'从左边看，看到的是熊猫的侧面。' }
+  ];
+  shuffle(bank);
+  return bank.slice(0, 2);
+}
+function buildL2Bank(){
+  var items = [
+    { solid:'cube',     dir:'front', opts:['square','rect','circle'],        a:0, ex:'正方体每个面都是正方形，从前面看是正方形。' },
+    { solid:'cuboid',   dir:'front', opts:['rect','circle','square'],        a:0, ex:'长方体从前面看是长方形。' },
+    { solid:'cuboid',   dir:'left',  opts:['square','rect','circle'],        a:0, ex:'这个长方体从左面看是一个正方形。' },
+    { solid:'cuboid',   dir:'top',   opts:['rectGrid','rect','square'],      a:0, ex:'从上面看，看到长方形被分成两个小方格。' },
+    { solid:'cylinder', dir:'front', opts:['rect','circle','square'],        a:0, ex:'圆柱从前面看是长方形（像一罐罐头）。' },
+    { solid:'cylinder', dir:'top',   opts:['circle','rect','square'],        a:0, ex:'从上面看圆柱，看到的是圆形。' },
+    { solid:'sphere',   dir:'front', opts:['circle','rect','square'],        a:0, ex:'球不管从哪个方向看都是圆形。' }
+  ];
+  var bank = [];
+  for(var i=0;i<items.length;i++){
+    var it = items[i];
+    var opts = it.opts.slice();
+    shuffle(opts);
+    bank.push({ type:'view', solid:it.solid, dir:it.dir, opts:opts, a:opts.indexOf(it.opts[0]), ex:it.ex });
+  }
+  shuffle(bank);
+  return bank;
+}
+function buildBlockBank(){
+  var bank = [];
+  var dirs = ['front','top','left'];
+  SHAPES.forEach(function(sh, si){
+    dirs.forEach(function(d){
+      var correct = gridKeyOf(sh.cells, d);
+      var others = [];
+      SHAPES.forEach(function(sh2, sj){
+        dirs.forEach(function(d2){
+          if(si===sj && d2===d){ return; }
+          var k = gridKeyOf(sh2.cells, d2);
+          if(k !== correct && others.indexOf(k) < 0){ others.push(k); }
+        });
+      });
+      shuffle(others);
+      var opts = [correct].concat(others.slice(0,3));
+      shuffle(opts);
+      var ex = '从'+dirZh(d)+'看「'+sh.name+'」，看到的样子要数一数有几格、有几层。';
+      bank.push({ type:'block', shape:sh, dir:d, opts:opts, a:opts.indexOf(correct), ex:ex });
+    });
+  });
+  shuffle(bank);
+  return bank;
+}
+function buildL4Bank(){
+  var bank = [];
+  FACE_Q.forEach(function(f){ bank.push({ type:'face', face:f.face, correct:f.correct.slice(), ex:f.ex }); });
+  JUDGE_Q.forEach(function(j){ bank.push({ type:'judge', q:j.q, a:j.a, ex:j.ex }); });
+  var vs = buildL2Bank(); shuffle(vs);
+  bank = bank.concat(vs.slice(0,3));
+  var bs = buildBlockBank(); shuffle(bs);
+  bank = bank.concat(bs.slice(0,2));
+  shuffle(bank);
+  return bank;
+}
+var FACE_Q = [
+  { face:'square', correct:['cube','cuboid'], ex:'正方形面可能是正方体，也可能是长方体。' },
+  { face:'rect',   correct:['cuboid','cylinder'], ex:'长方形面可能是长方体，也可能是圆柱。' },
+  { face:'circle', correct:['cylinder','sphere'], ex:'圆形面可能是圆柱，也可能是球。' }
+];
+var JUDGE_Q = [
+  { q:'站在同一位置观察一个物体，最多能看到 3 个面。', a:true,  ex:'从一个位置最多能看到前面、上面和侧面，最多 3 个面。' },
+  { q:'从不同的方向看同一个物体，看到的形状一定不同。', a:false, ex:'可能不同，也可能相同，比如球从任何方向看都是圆形。' },
+  { q:'正方体从前面看是正方形，从上面看也是正方形。', a:true,  ex:'正方体 6 个面都是正方形。' },
+  { q:'从前面看一个圆柱，看到的是圆形。', a:false, ex:'从前面看圆柱看到的是长方形，从上面看才是圆形。' }
+];
+
+/* =====================================================
+   挑战引擎（限时计分）
+===================================================== */
+var MODE_META = {
+  l1:{ title:'概念屋小练习', en:'Mini Quiz', zh:'2 小题', timed:false, level:1, retry:'再练一次' },
+  l2:{ title:'3D 实验台挑战', en:'3D Lab Quiz', zh:'60 秒冲关', timed:true, level:2, retry:'再挑战一次' },
+  l3:{ title:'拼积木挑战', en:'Block Quiz', zh:'60 秒冲关', timed:true, level:3, retry:'再挑战一次' },
+  l4:{ title:'侦探大挑战', en:'Detective Quiz', zh:'60 秒综合', timed:true, level:4, retry:'再挑战一次' }
+};
+function startChallenge(mode){
+  stopTimer();
+  var meta = MODE_META[mode];
+  Q = { mode:mode, bank:[], i:0, score:0, answered:false, timer:null, timeLeft:60, timed:meta.timed };
+  if(mode==='l1'){ Q.bank = buildL1Bank(); }
+  if(mode==='l2'){ Q.bank = buildL2Bank(); }
+  if(mode==='l3'){ Q.bank = buildBlockBank(); }
+  if(mode==='l4'){ Q.bank = buildL4Bank(); }
+  document.getElementById('qzTitle').textContent = meta.title;
+  document.getElementById('qzChipEn').textContent = meta.en;
+  document.getElementById('qzChipZh').textContent = meta.zh;
+  document.getElementById('quizTimer').style.display = meta.timed ? '' : 'none';
+  showView('view-quiz');
+  if(Q.timed){ startTimer(); }
+  renderQ();
+}
+function startTimer(){
+  stopTimer();
+  Q.timeLeft = 60;
+  document.getElementById('quizTimer').textContent = 60;
+  document.getElementById('quizTimer').classList.remove('danger');
+  Q.timer = setInterval(function(){
+    Q.timeLeft--;
+    var el = document.getElementById('quizTimer');
+    el.textContent = Q.timeLeft;
+    if(Q.timeLeft <= 10){
+      el.classList.add('danger');
+      tick();
+    }
+    if(Q.timeLeft <= 0){
+      stopTimer();
+      finishQuiz();
+    }
+  }, 1000);
+}
+function stopTimer(){
+  if(Q.timer){ clearInterval(Q.timer); Q.timer = null; }
+}
+function quitQuiz(){
+  if(confirm('确定要退出挑战吗？本次成绩不保存。')){
+    goHome();
+  }
+}
+function renderQ(){
+  Q.answered = false;
+  document.getElementById('quizProg').textContent = '第 '+(Q.i+1)+' / '+Q.bank.length+' 题';
+  document.getElementById('quizScore').textContent = Q.score;
+  document.getElementById('quizFb').innerHTML = '';
+  document.getElementById('quizNext').style.display = 'none';
+  var item = Q.bank[Q.i];
+  var body = '';
+  if(item.type === 'view'){
+    body += '<div class="q-text">从「<span class="zh">'+dirZh(item.dir)+'</span>」看这个<span class="zh">'+solidZh(item.solid)+'</span>，你看到的是？</div>'
+          + '<div class="q-sub">'+solidDesc(item.solid)+'</div>'
+          + '<div class="stage"><div class="shape-box">'+solid3D(item.solid)+'</div></div>'
+          + '<div class="opts">';
+    for(var j=0;j<item.opts.length;j++){
+      body += '<button class="opt" data-v="'+j+'" onclick="answerSingle('+j+')">'+viewSVG(item.opts[j], 'small')+'</button>';
+    }
+    body += '</div>';
+  }else if(item.type === 'block'){
+    body += '<div class="q-text">这个「<span class="zh">'+item.shape.name+'</span>」积木，从「<span class="zh">'+dirZh(item.dir)+'</span>」看到的是？</div>'
+          + '<div class="q-sub">数一数：有几格、有几层？</div>'
+          + '<div class="stage"><div class="shape-box">'+isoShape(item.shape.cells, 38)+'</div></div>'
+          + '<div class="opts">';
+    for(var k=0;k<item.opts.length;k++){
+      body += '<button class="opt" data-v="'+k+'" onclick="answerSingle('+k+')">'+gridSVGKey(item.opts[k], 'small')+'</button>';
+    }
+    body += '</div>';
+  }else if(item.type === 'panda'){
+    body += '<div class="q-text">小美站在熊猫的「<span class="zh">'+dirZh(item.dir)+'</span>」，她看到的是？</div>'
+          + '<div class="opts">';
+    for(var p=0;p<item.opts.length;p++){
+      body += '<button class="opt" data-v="'+p+'" onclick="answerSingle('+p+')">'+viewSVG(item.opts[p], 'small')+'</button>';
+    }
+    body += '</div>';
+  }else if(item.type === 'face'){
+    body += '<div class="q-text">👀 从某个方向只看到这个面，它可能是什么立体图形？</div>'
+          + '<div class="q-sub">可以选多个，选对全部才加分</div>'
+          + '<div class="stage"><div class="shape-box">'+faceSVG(item.face)+'</div></div>'
+          + '<div class="multi-opts" id="faceOpts">';
+    for(var m=0;m<SOLIDS.length;m++){
+      body += '<div class="mopt" id="fopt'+SOLIDS[m].k+'" data-k="'+SOLIDS[m].k+'" onclick="toggleFace(this)">'
+            +   solidMini(SOLIDS[m].k)
+            +   '<div class="mname">'+SOLIDS[m].zh+'</div>'
+            + '</div>';
+    }
+    body += '</div>'
+          + '<div class="footer-actions"><button class="btn primary" onclick="submitFace()">✅ 提交答案</button></div>';
+  }else if(item.type === 'judge'){
+    body += '<div class="q-text">对还是错？</div>'
+          + '<div class="q-sub">'+item.q+'</div>'
+          + '<div class="opts">'
+          +   '<button class="opt" data-v="1" onclick="answerJudge(1)">✅ 对</button>'
+          +   '<button class="opt" data-v="0" onclick="answerJudge(0)">❌ 错</button>'
+          + '</div>';
+  }
+  document.getElementById('quizBody').innerHTML = body;
+}
+function grade(ok, ex){
+  Q.answered = true;
+  Q.score = Math.max(0, Q.score + (ok ? 10 : -5));
+  document.getElementById('quizScore').textContent = Q.score;
+  sfx(ok);
+  document.getElementById('quizFb').innerHTML =
+      '<div class="fb '+(ok?'ok':'bad')+'" style="margin-top:16px">'
+    + (ok ? '🎉 答对啦！+10 分' : '💪 答错啦，−5 分') + '　' + ex + '</div>';
+  var nx = document.getElementById('quizNext');
+  nx.textContent = (Q.i === Q.bank.length-1) ? '看成绩 →' : '下一题 →';
+  nx.style.display = '';
+  if(ok){ speak('答对啦！'); }else{ speak('答错啦，正确答案是，' + ex); }
+}
+function answerSingle(j){
+  if(Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var ok = (j === item.a);
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var v = parseInt(opts[k].getAttribute('data-v'),10);
+    if(v === item.a){ opts[k].classList.add('ok'); }
+    else if(v === j){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, item.ex);
+}
+function toggleFace(el){
+  if(Q.answered){ return; }
+  el.classList.toggle('sel');
+}
+function submitFace(){
+  if(Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var sel = [];
+  var els = document.querySelectorAll('#faceOpts .mopt');
+  for(var i=0;i<els.length;i++){
+    if(els[i].classList.contains('sel')){ sel.push(els[i].getAttribute('data-k')); }
+  }
+  if(sel.length === 0){ showToast('先选一选，再提交答案哦'); return; }
+  var ok = sel.length === item.correct.length;
+  if(ok){
+    for(var j=0;j<item.correct.length;j++){
+      if(sel.indexOf(item.correct[j]) < 0){ ok = false; break; }
+    }
+  }
+  for(var m=0;m<els.length;m++){
+    var k = els[m].getAttribute('data-k');
+    if(item.correct.indexOf(k) >= 0){ els[m].classList.add('ok'); }
+    else if(sel.indexOf(k) >= 0){ els[m].classList.add('bad'); }
+  }
+  grade(ok, item.ex);
+}
+function answerJudge(v){
+  if(Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var ok = (v === (item.a ? 1 : 0));
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var vv = parseInt(opts[k].getAttribute('data-v'),10);
+    if(vv === (item.a?1:0)){ opts[k].classList.add('ok'); }
+    else if(vv === v){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, item.ex);
+}
+function nextQ(){
+  Q.i++;
+  if(Q.i >= Q.bank.length){ finishQuiz(); } else { renderQ(); }
+}
+
+/* =====================================================
+   结算
+===================================================== */
+function finishQuiz(){
+  stopTimer();
+  var meta = MODE_META[Q.mode];
+  var bonus = Q.timed ? Q.timeLeft * 2 : 0;
+  var sc = Q.score + bonus;
+  var st;
+  if(meta.level === 1){
+    st = sc >= 20 ? 3 : (sc >= 10 ? 2 : 1);
+  }else{
+    st = sc >= 130 ? 3 : (sc >= 80 ? 2 : (sc >= 40 ? 1 : 0));
+  }
+  G.stars[meta.level] = Math.max(G.stars[meta.level], st);
+  G.best[meta.level] = Math.max(G.best[meta.level], sc);
+  var newUnlock = false;
+  if(st >= 1 && meta.level < 4){
+    var old = G.unlocked;
+    G.unlocked = Math.max(G.unlocked, meta.level + 1);
+    if(G.unlocked > old){
+      newUnlock = true;
+    }
+  }
+  save();
+  document.getElementById('rScore').textContent = sc;
+  document.getElementById('rStars').innerHTML = starStr(st, 3);
+  var msg;
+  if(st === 3){ msg = '太棒了！你就是观察小达人！🏆'; }
+  else if(st === 2){ msg = '真不错！再练一练就能拿满分！'; }
+  else if(st === 1){ msg = '有进步！回去再看看，下次更高分！'; }
+  else{ msg = '没关系，回到关卡里再玩一玩，一定行！'; }
+  if(bonus > 0){ msg += '（含时间奖励 +'+bonus+' 分）'; }
+  if(newUnlock){ msg += '　🎉 新关卡解锁啦！'; }
+  document.getElementById('rMsg').textContent = msg;
+  document.getElementById('rRetry').textContent = meta.retry;
+  var conf = document.getElementById('confetti');
+  var emos = ['🎉','🎊','⭐','✨','🌈','💖','🔍','👀'];
+  var ch = '';
+  for(var ci=0; ci<16; ci++){
+    ch += '<span style="left:'+(6+Math.random()*88).toFixed(1)+'%;font-size:'+(20+Math.random()*26).toFixed(1)+'px;'
+        + 'animation-duration:'+(2.2+Math.random()*2.2).toFixed(2)+'s;animation-delay:'+(Math.random()*0.8).toFixed(2)+'s">'
+        + emos[ci%emos.length]+'</span>';
+  }
+  conf.innerHTML = ch;
+  showView('view-result');
+  if(st > 0){ sfx(true); }
+}
+function retryChallenge(){
+  startChallenge(Q.mode);
+}
+
+/* =====================================================
+   启动
+===================================================== */
+load();
+document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+renderHome();
+showView('view-home');
+if('speechSynthesis' in window){
+  speechSynthesis.getVoices();
+  if(speechSynthesis.onvoiceschanged !== undefined){
+    speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); };
+  }
+}
+
+</script>
+</body>
+</html>
