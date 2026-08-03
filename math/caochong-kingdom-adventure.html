@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>曹冲称象的质量王国</title>
+<style>
+:root{
+  --ink:#333; --title:#111; --en:#2c3e9b; --zh:#c44569; --gold:#f5b301;
+  --ok:#2e9e5b; --bad:#d64550; --sky1:#bfe3ff; --sky2:#eef8ff; --cream:#fff8ec;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink);overflow-x:hidden;
+  background:linear-gradient(180deg,#a8d8ff 0%,#d6ecff 45%,#eaf7ff 75%,#d9f3e8 100%);
+  background-attachment:fixed;
+}
+button{font-family:inherit;}
+#muteBtn{
+  position:fixed;top:12px;right:12px;z-index:9000;background:#fff;color:#333;
+  border:3px solid var(--ink);border-radius:999px;width:52px;height:52px;font-size:24px;
+  cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.16);transition:transform .12s;
+}
+#muteBtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.16);}
+#game-root{position:relative;min-height:100vh;padding:12px 14px 60px;}
+.scene{position:relative;max-width:900px;margin:0 auto;}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:#fff;color:#333;border:3px solid var(--ink);border-radius:999px;
+  font-size:19px;font-weight:900;padding:14px 30px;cursor:pointer;
+  box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .1s, box-shadow .1s;
+  touch-action:manipulation;user-select:none;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18);}
+.btn.primary{background:#fff;color:var(--zh);border-color:var(--zh);font-size:22px;}
+.btn.big{font-size:24px;padding:18px 42px;border-width:4px;}
+.btn.ghost{background:transparent;box-shadow:none;border-color:rgba(51,51,51,.4);font-size:15px;padding:9px 18px;}
+
+.chip{display:inline-block;border-radius:999px;padding:3px 13px;font-size:13px;font-weight:900;letter-spacing:.5px;}
+.chip.en{background:var(--en);color:#fff;}
+.chip.zh{background:var(--zh);color:#fff;}
+
+.panel{
+  background:rgba(255,255,255,.92);border:3px solid var(--ink);border-radius:26px;
+  box-shadow:0 7px 0 rgba(0,0,0,.12);padding:20px;
+}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.hud .stat{font-size:18px;font-weight:900;}
+.hud .timer{color:var(--ok);}
+
+.tip-btn{
+  background:#fff;border:2.5px solid var(--zh);color:var(--zh);border-radius:999px;
+  padding:7px 15px;font-size:14px;font-weight:900;cursor:pointer;
+}
+.script-card{
+  display:none;background:#fff;border:3px solid var(--zh);border-radius:20px;
+  padding:14px 16px;margin-top:10px;font-size:15px;line-height:1.8;font-weight:700;
+}
+
+.back-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.back-row h2{font-size:22px;color:var(--title);flex:1;min-width:150px;}
+
+/* ===== 标题场景 ===== */
+#scene-title{text-align:center;padding-top:34px;}
+.t-hero{position:relative;height:190px;margin-bottom:8px;}
+.t-elephant{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:110px;filter:drop-shadow(0 10px 0 rgba(0,0,0,.10));animation:eleFloat 2.6s ease-in-out infinite;}
+@keyframes eleFloat{0%,100%{transform:translateX(-50%) translateY(0) rotate(-2deg);}50%{transform:translateX(-50%) translateY(-14px) rotate(3deg);}}
+.t-boat{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);font-size:64px;animation:boatBob 3.2s ease-in-out infinite;}
+@keyframes boatBob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-1.5deg);}50%{transform:translateX(-50%) translateY(6px) rotate(1.5deg);}}
+.t-wave{position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);width:320px;height:36px;}
+.t-title{
+  font-size:clamp(36px,7.4vw,56px);font-weight:900;color:var(--zh);
+  text-shadow:0 4px 0 #fff, 0 7px 0 rgba(0,0,0,.10);letter-spacing:2px;line-height:1.15;
+}
+.t-sub{margin-top:10px;font-size:16px;font-weight:800;color:var(--en);}
+.t-start{margin-top:26px;}
+.t-note{margin-top:16px;font-size:13px;font-weight:700;color:#8a7f6b;}
+.cloud{position:absolute;font-size:44px;opacity:.8;animation:cloudDrift linear infinite;}
+@keyframes cloudDrift{from{transform:translateX(-120px);}to{transform:translateX(calc(100vw + 120px));}}
+.sun{position:absolute;top:18px;right:26px;font-size:56px;animation:sunSpin 22s linear infinite;}
+@keyframes sunSpin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+
+/* ===== 故事场景 ===== */
+#scene-story{padding-top:20px;}
+.story-box{max-width:640px;margin:0 auto;}
+.story-avatar{font-size:80px;text-align:center;animation:eleFloat 2.2s ease-in-out infinite;}
+.story-bubble{
+  position:relative;background:#fff;border:3px solid var(--ink);border-radius:24px;
+  padding:18px 20px;font-size:19px;line-height:1.75;font-weight:800;min-height:120px;
+  box-shadow:0 6px 0 rgba(0,0,0,.10);margin-top:18px;
+}
+.story-bubble::before{
+  content:'';position:absolute;left:50%;top:-16px;transform:translateX(-50%);
+  border:9px solid transparent;border-bottom:9px solid var(--ink);
+}
+.story-bubble::after{
+  content:'';position:absolute;left:50%;top:-11px;transform:translateX(-50%);
+  border:7px solid transparent;border-bottom:7px solid #fff;
+}
+.story-step{display:inline-block;background:var(--badge,#4a5fcf);color:#fff;border-radius:999px;padding:2px 12px;font-size:14px;font-weight:900;margin-bottom:8px;}
+.story-nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:10px;}
+.story-dots{display:flex;gap:6px;}
+.story-dots i{width:10px;height:10px;border-radius:50%;background:#c9c2b2;display:inline-block;}
+.story-dots i.on{background:var(--zh);}
+
+/* ===== 关卡地图 ===== */
+#scene-map{padding-top:16px;}
+.map-head{text-align:center;margin-bottom:16px;}
+.map-title{font-size:30px;font-weight:900;color:var(--title);}
+.map-sub{font-size:14px;font-weight:800;color:var(--en);margin-top:4px;}
+.river{position:relative;display:flex;flex-direction:column;gap:12px;padding:8px 0;}
+.stage{
+  display:flex;align-items:center;gap:14px;background:#fff;border:3px solid var(--ink);
+  border-radius:22px;padding:13px 16px;box-shadow:0 5px 0 rgba(0,0,0,.12);
+  cursor:pointer;transition:transform .12s, opacity .2s;position:relative;
+}
+.stage:active{transform:translateY(2px);}
+.stage.locked{opacity:.55;cursor:not-allowed;}
+.stage .s-icon{font-size:40px;width:52px;text-align:center;flex:none;animation:eleFloat 3s ease-in-out infinite;}
+.stage .s-info{flex:1;min-width:0;}
+.stage .s-name{font-size:19px;font-weight:900;color:var(--title);}
+.stage .s-en{font-size:12px;color:var(--en);font-weight:900;letter-spacing:.4px;margin-top:2px;}
+.stage .s-desc{font-size:13px;color:#777;font-weight:700;margin-top:3px;}
+.stage .s-stars{font-size:16px;letter-spacing:1px;}
+.stage .s-num{
+  position:absolute;top:-12px;left:14px;background:var(--zh);color:#fff;font-size:13px;font-weight:900;
+  border:2.5px solid var(--ink);border-radius:999px;padding:2px 11px;
+}
+.stage.done .s-num{background:var(--ok);}
+.badge-banner{
+  display:none;margin-top:14px;background:linear-gradient(135deg,#fff6d8,#ffe9f2);
+  border:3px solid var(--gold);border-radius:22px;padding:14px;text-align:center;
+  font-size:20px;font-weight:900;color:var(--zh);box-shadow:0 5px 0 rgba(0,0,0,.1);
+}
+.badge-banner small{display:block;font-size:13px;color:var(--en);margin-top:4px;}
+.map-foot{text-align:center;margin-top:16px;}
+
+/* ===== 实验：船 ===== */
+.exp-wrap{display:flex;flex-direction:column;gap:10px;}
+.river-scene{
+  position:relative;height:300px;border:3px solid var(--ink);border-radius:24px;overflow:hidden;
+  background:linear-gradient(180deg,#eaf7ff 0%,#d7efff 30%,#7ec8f2 42%,#5db3e8 100%);
+  box-shadow:0 6px 0 rgba(0,0,0,.12);
+}
+.river-scene .sky-deco{position:absolute;font-size:30px;opacity:.75;}
+.boat-box{position:absolute;left:50%;top:50px;width:230px;height:90px;transform:translateX(-50%);transition:top .55s cubic-bezier(.34,1.3,.5,1);z-index:4;animation:boatBob 3.2s ease-in-out infinite;}
+.boat-box.settled{animation:none;}
+@keyframes boatBob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-1.2deg);}50%{transform:translateX(-50%) translateY(3px) rotate(1.2deg);}}
+.boat-svg{display:block;width:230px !important;height:90px !important;}
+.bag-on-boat{position:absolute;left:0;top:0;width:230px;height:44px;pointer-events:none;}
+.bag-on-boat .bag{position:absolute;pointer-events:auto;top:0 !important;}
+.target-line{
+  position:absolute;left:8%;right:8%;height:0;border-top:4px dashed var(--bad);
+  z-index:5;transition:top .4s;
+}
+.target-label{
+  position:absolute;right:10px;transform:translateY(-100%);top:-24px;
+  background:#fff;border:2.5px solid var(--bad);color:var(--bad);border-radius:999px;
+  font-size:13px;font-weight:900;padding:3px 10px;white-space:nowrap;z-index:6;
+}
+.wave-layer{position:absolute;left:0;right:0;bottom:0;height:42px;background:repeating-linear-gradient(0deg,#eaf7ff 0 8px,#a8dcf5 8px 16px);opacity:.5;animation:waveSlide 4s linear infinite;}
+@keyframes waveSlide{from{background-position:0 0;}to{background-position:60px 0;}}
+.waterline-mark{position:absolute;left:0;right:0;top:196px;border-top:2px dashed rgba(255,255,255,.7);z-index:2;}
+.goal-bar{
+  display:flex;align-items:center;justify-content:space-between;background:#fff;
+  border:3px solid var(--ink);border-radius:18px;padding:10px 14px;gap:10px;flex-wrap:wrap;
+}
+.goal-txt{font-size:16px;font-weight:900;}
+.goal-txt b{color:var(--zh);font-size:20px;}
+.now-txt{font-size:16px;font-weight:900;}
+.now-txt b{color:var(--en);font-size:20px;}
+.palette{
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:#fff;
+  border:3px solid var(--ink);border-radius:20px;padding:14px;min-height:88px;
+  box-shadow:0 5px 0 rgba(0,0,0,.12);
+}
+.bag{
+  position:relative;width:74px;height:84px;cursor:grab;touch-action:none;user-select:none;
+  filter:drop-shadow(0 4px 0 rgba(0,0,0,.12));transition:transform .12s;
+}
+.bag:active{cursor:grabbing;}
+.bag svg{width:100%;height:auto;display:block;}
+.bag .bag-label{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-38%);text-align:center;
+  color:#fff;font-weight:900;font-size:14px;text-shadow:0 1px 2px rgba(0,0,0,.35);white-space:nowrap;
+}
+.bag .bag-sub{display:block;font-size:11px;font-weight:800;}
+.bag.dragging{position:fixed;z-index:8000;transform:scale(1.18);transition:none;pointer-events:none;}
+.bag.hint-wiggle{animation:wiggle .45s ease;}
+@keyframes wiggle{0%,100%{transform:rotate(0);}25%{transform:rotate(-8deg);}75%{transform:rotate(8deg);}}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:4px;}
+.success-overlay{
+  position:absolute;inset:0;background:rgba(13,30,55,.42);border-radius:24px;z-index:50;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;
+}
+.success-overlay.show{display:flex;animation:overlayIn .35s ease;}
+@keyframes overlayIn{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+.success-overlay .succ-card{
+  background:#fff;border:4px solid var(--gold);border-radius:26px;padding:26px 34px;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);max-width:430px;width:100%;
+}
+.success-overlay .big{font-size:56px;line-height:1;}
+.success-overlay .succ-tag{display:inline-block;background:var(--ok);color:#fff;border-radius:999px;padding:3px 14px;font-size:13px;font-weight:900;margin-top:8px;}
+.success-overlay h3{font-size:26px;color:var(--title);margin-top:6px;}
+.success-overlay .stars{font-size:34px;letter-spacing:4px;margin-top:2px;}
+.success-overlay .succ-msg{font-size:15px;font-weight:800;color:#666;line-height:1.6;margin-top:6px;}
+
+/* ===== 跷跷板 ===== */
+.seesaw-scene{position:relative;height:290px;border:3px solid var(--ink);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#fff3d6 0%,#ffe9c9 55%,#e8d5a8 100%);box-shadow:0 6px 0 rgba(0,0,0,.12);}
+.seesaw-stage{position:absolute;left:50%;top:130px;transform:translateX(-50%);width:320px;height:120px;transition:transform .7s cubic-bezier(.34,1.5,.5,1);}
+.seesaw-board{position:absolute;left:0;top:20px;width:320px;height:16px;background:#a4713c;border:3px solid #6d4a22;border-radius:8px;}
+.seesaw-pivot{position:absolute;left:50%;top:36px;transform:translateX(-50%);width:18px;height:42px;background:#6d4a22;border-radius:4px;}
+.seesaw-item{position:absolute;top:-72px;font-size:46px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.12));animation:eleFloat 2.4s ease-in-out infinite;z-index:1;}
+.si-l{left:26px;} .si-r{right:26px;}
+.seesaw-label{position:absolute;top:-40px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:3px 10px;font-size:14px;font-weight:900;z-index:2;}
+.sL{left:14px;} .sR{right:14px;}
+.seesaw-board{z-index:2;}
+.seesaw-pivot{z-index:2;}
+.ground{position:absolute;left:0;right:0;bottom:0;height:44px;background:linear-gradient(180deg,#b9e0b0,#92c97f);border-top:3px solid var(--ink);}
+.q-item{text-align:center;font-size:20px;font-weight:900;padding:6px 0 0;}
+.cmp-opts{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+.cmp-opt{background:#fff;border:3px solid var(--ink);border-radius:16px;font-size:20px;font-weight:900;padding:10px 22px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12);}
+.cmp-opt:active{transform:translateY(2px);}
+.cmp-fb{text-align:center;margin-top:12px;font-size:16px;font-weight:900;min-height:24px;}
+
+/* ===== 掂一掂分类 ===== */
+.drop-scene{position:relative;height:280px;border:3px solid var(--ink);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#e7f5ff,#d3eaff 60%,#f3e8cf 100%);box-shadow:0 6px 0 rgba(0,0,0,.12);}
+.drop-item{
+  position:absolute;left:50%;top:36px;transform:translateX(-50%);font-size:56px;
+  animation:eleFloat 2s ease-in-out infinite;filter:drop-shadow(0 5px 0 rgba(0,0,0,.14));cursor:grab;touch-action:none;
+}
+.drop-item.dragging{position:fixed;z-index:8000;animation:none;pointer-events:none;transform:scale(1.15);}
+.drop-bins{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:space-around;gap:8px;padding:0 10px;}
+.bin{
+  flex:1;max-width:170px;height:104px;border:3px dashed var(--ink);border-radius:18px;
+  background:rgba(255,255,255,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:transform .15s, background .2s;font-weight:900;font-size:15px;
+}
+.bin.hover{background:#fff;transform:scale(1.05);border-style:solid;}
+.bin .b-icon{font-size:30px;}
+.bin.ok-flash{background:#eafaf0;border-color:var(--ok);border-style:solid;}
+.drop-q{text-align:center;font-size:19px;font-weight:900;padding:4px 0;}
+.drop-fb{text-align:center;margin-top:10px;font-size:16px;font-weight:900;min-height:24px;}
+
+/* ===== 结算 ===== */
+#scene-result{text-align:center;padding-top:40px;}
+.res-card{display:inline-block;padding:34px 46px;}
+.res-stars{font-size:46px;letter-spacing:6px;margin-top:10px;}
+.res-score{font-size:34px;font-weight:900;color:var(--zh);margin-top:8px;}
+.res-msg{font-size:17px;font-weight:800;margin-top:8px;color:#555;line-height:1.6;}
+.res-btns{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+
+@media (max-width:560px){
+  #game-root{padding:8px 8px 40px;}
+  .bag{width:62px;height:72px;}
+  .stage .s-icon{font-size:32px;width:42px;}
+  .btn{font-size:16px;padding:12px 22px;}
+}
+</style>
+</head>
+<body>
+<button id="muteBtn" onclick="toggleMute()">🔊</button>
+<div id="game-root"></div>
+<script>
+/* ===================== 核心（内嵌） ===================== */
+var GAME_TITLE='曹冲称象的质量王国';
+var SAVE_KEY='caochong-kingdom-v2';
+var G={unlocked:1,stars:{},best:{},muted:false,done:{}};
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G));}catch(e){}}
+function load(){try{var s=localStorage.getItem(SAVE_KEY);if(s){var o=JSON.parse(s);if(o){for(var k in o){G[k]=o[k];}if(!G.stars){G.stars={};}if(!G.done){G.done={};}if(!G.best){G.best={};}}}}catch(e){}}
+function starStr(n){var s='';for(var i=0;i<3;i++){s+=(i<n?'⭐':'☆');}return s;}
+var scene=null;var SCENES={};
+function registerScene(id,r,e,x){SCENES[id]={render:r,enter:e,exit:x};}
+function showScene(id){
+  if(scene&&SCENES[scene]&&SCENES[scene].exit){SCENES[scene].exit();}
+  clearParticles();
+  scene=id;var root=document.getElementById('game-root');root.innerHTML='';
+  if(SCENES[id].render){root.innerHTML=SCENES[id].render();}
+  if(SCENES[id].enter){SCENES[id].enter();}
+  window.scrollTo(0,0);
+}
+var rafId=null;var ANIMS=[];
+function animAdd(fn){ANIMS.push({fn:fn});}
+function animLoop(t){
+  for(var i=ANIMS.length-1;i>=0;i--){var a=ANIMS[i];if(!a){ANIMS.splice(i,1);continue;}if(a.fn(t)===false){ANIMS.splice(i,1);}}
+  rafId=requestAnimationFrame(animLoop);
+}
+function animClear(){ANIMS=[];}
+function startLoop(){if(!rafId){rafId=requestAnimationFrame(animLoop);}}
+var P_CONTAINER=null;
+function ensureParticles(){
+  if(!P_CONTAINER){P_CONTAINER=document.createElement('div');P_CONTAINER.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;';document.body.appendChild(P_CONTAINER);}
+  return P_CONTAINER;
+}
+function burst(x,y,opts){
+  opts=opts||{};var n=opts.n||18;var colors=opts.colors||['#ffd54f','#ff8fb2','#4f9dff','#7ed7a5','#ff9f43'];
+  var root=ensureParticles();
+  for(var i=0;i<n;i++){
+    var el=document.createElement('span');
+    var size=(opts.sizeMin||6)+Math.random()*(opts.sizeMax||16);
+    el.style.cssText='position:absolute;left:'+x+'px;top:'+y+'px;width:'+size+'px;height:'+size+'px;border-radius:'+(opts.round?'50%':'3px')+';background:'+colors[i%colors.length]+';transform:translate(-50%,-50%);pointer-events:none;';
+    root.appendChild(el);
+    var dx=(Math.random()-0.5)*2*(opts.spreadX||320);var dy=-Math.random()*(opts.up||220);
+    var anim=el.animate([
+      {transform:'translate(-50%,-50%) translate(0,0) scale(1)',opacity:1},
+      {transform:'translate(-50%,-50%) translate('+dx+'px,'+(dy+260)+'px) scale(.3)',opacity:0}
+    ],{duration:600+Math.random()*500,easing:'cubic-bezier(.2,.7,.4,1)'});
+    function kill(){if(el.parentNode){el.remove();}}
+    anim.onfinish=kill;
+    anim.oncancel=kill;
+    setTimeout(kill,1200);
+  }
+}
+function floatText(x,y,txt,color){
+  var root=ensureParticles();var el=document.createElement('div');el.textContent=txt;
+  el.style.cssText='position:absolute;left:'+x+'px;top:'+y+'px;transform:translate(-50%,-50%);font-weight:900;font-size:22px;color:'+(color||'#333')+';pointer-events:none;text-shadow:0 2px 0 #fff;z-index:10000;';
+  root.appendChild(el);
+  var anim=el.animate([
+    {transform:'translate(-50%,-50%) translateY(0)',opacity:1},
+    {transform:'translate(-50%,-50%) translateY(-46px)',opacity:0}
+  ],{duration:900,easing:'ease-out'});
+  function kill(){if(el.parentNode){el.remove();}}
+  anim.onfinish=kill;
+  anim.oncancel=kill;
+  setTimeout(kill,1500);
+}
+function clearParticles(){
+  if(P_CONTAINER){P_CONTAINER.innerHTML='';}
+}
+var AC=null;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended'){AC.resume();}return AC;}
+function tone(freq,dur,when,type,vol){
+  if(G.muted)return;var ctx=ac();if(!ctx)return;
+  when=when||0;type=type||'sine';vol=vol||0.22;
+  var o=ctx.createOscillator(),g=ctx.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001,ctx.currentTime+when);
+  g.gain.exponentialRampToValueAtTime(vol,ctx.currentTime+when+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+when+dur);
+  o.connect(g);g.connect(ctx.destination);
+  o.start(ctx.currentTime+when);o.stop(ctx.currentTime+when+dur+0.06);
+}
+var SFX={
+  pop:function(){tone(520,.12,0,'triangle');},
+  tap:function(){tone(300,.06,0,'sine',.12);},
+  plop:function(){tone(180,.18,0,'sine',.25);tone(90,.22,.04,'sine',.22);},
+  coin:function(){tone(880,.12,0);tone(1320,.22,.1);},
+  good:function(){tone(660,.14,0);tone(880,.18,.12);tone(1100,.28,.24);},
+  bad:function(){tone(220,.25,0,'sawtooth',.12);},
+  splash:function(){tone(240,.3,0,'sine',.16);tone(120,.34,.08,'sine',.14);},
+  success:function(){[523,659,784,1046].forEach(function(f,i){tone(f,.22,i*.13,'triangle',.24);});},
+  click:function(){tone(420,.08,0,'triangle',.15);},
+  drop:function(){tone(150,.2,0,'sine',.28);tone(70,.24,.06,'sine',.2);}
+};
+function toggleMute(){G.muted=!G.muted;save();var b=document.getElementById('muteBtn');if(b){b.textContent=G.muted?'🔇':'🔊';}}
+function el(id){return document.getElementById(id);}
+function $(sel,root){return (root||document).querySelector(sel);}
+function $$(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel));}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function pick(arr){return arr[rnd(0,arr.length-1)];}
+function shuffle(arr){for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}return arr;}
+function showToast(msg,color){
+  var t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#fff;color:#333;border:3px solid #333;border-radius:999px;padding:10px 22px;font-weight:900;font-size:16px;z-index:9998;box-shadow:0 5px 0 rgba(0,0,0,.14);display:none;';document.body.appendChild(t);}
+  t.textContent=msg;t.style.borderColor=color||'#333';t.style.display='block';
+  clearTimeout(t._tm);t._tm=setTimeout(function(){t.style.display='none';},2400);
+}
+
+/* ===================== 曹冲称象 · 数据 ===================== */
+var LEVELS=[
+  {id:1,icon:'🚢',name:'称象渡口',en:'ELEPHANT FERRY',desc:'把石头搬上船，让水面到达记号',tip:'宝贝，这个故事讲的是曹冲用船和石头“称”出大象的重量：大象上船，水面到哪儿就画条线；把大象换成石头，装到水面和线一样高。这时候石头的总重量就等于大象的重量啦！这一关：用袋子里的石头，把船压到红色记号线，石头总重量要正好等于目标重量哦。'},
+  {id:2,icon:'🧺',name:'集市货摊',en:'MARKET STALL',desc:'克和千克混着称，先换算再装船',tip:'这一关的袋子上写着克和千克！记住：1 千克 = 1000 克。先在心里换算成同一个单位，再决定装哪些袋子，让船刚好压到线。'},
+  {id:3,icon:'⚖️',name:'称重大挑战',en:'WEIGHING CHALLENGE',desc:'坐上跷跷板，比一比谁重',tip:'跷跷板会告诉我们谁更重：重的一头会压下去。先把两边都换算成一样的单位，再点“谁更重”。答对 4 次就过关！'},
+  {id:4,icon:'🕵️',name:'掂一掂',en:'FEEL & CHOOSE',desc:'掂一掂，把物品放进合适的筐',tip:'掂一掂、想一想：很轻的用“克”，一般的用“千克”，很重很重的大象、轮船才用“吨”。把 8 个物品全部放进正确的筐！'},
+  {id:5,icon:'🎤',name:'质量小讲堂',en:'MASS LECTURE',desc:'综合大挑战：吨、千克、克全上场',tip:'最后一关！袋子有克、千克、吨三种单位，目标也可能是“几吨几千克”。先换算，再装船，小讲堂就开张啦！'}
+];
+var STORY=[
+  {who:'📜',txt:'很久以前，有人送给曹操一头大象。大家都很想知道：大象到底有多重？'},
+  {who:'🐘',txt:'大象太重了，没有秤能称得动它。有人出主意：把大象切成一块块来称……'},
+  {who:'👦',txt:'小曹冲说：别切！我有办法。把大象赶上船，船会下沉，我在船帮画一条线。'},
+  {who:'👦',txt:'再把大象赶下船，往船上装石头，装到水面和那条线一样高。'},
+  {who:'👦',txt:'这时候，石头的总重量就等于大象的重量！这叫“等量代换”。'},
+  {who:'⚖️',txt:'你也来试试吧！亲手把船压到记号线，你就是小小称象师！'}
+];
+
+/* ---- 实验题目 ---- */
+var BOAT_LEVELS={
+  1:{bags:[{w:1000},{w:1000},{w:2000},{w:2000},{w:5000}], target:7000, tLabel:'7千克', max:7000},
+  2:{bags:[{w:500},{w:500},{w:1000},{w:2000},{w:1000}], target:4000, tLabel:'4千克', max:4000},
+  5:{bags:[{w:1000000},{w:1000000},{w:1000},{w:500000},{w:500000}], target:2500000, tLabel:'2吨500千克', max:3000000}
+};
+var COMPARE_POOL=[
+  {a:'🍎 3千克',b:'🍉 5千克',unit:'千克'},
+  {a:'🧺 2千克',b:'🥚 1500克',unit:'千克'},
+  {a:'🐘 4吨',b:'🚗 2500千克',unit:'千克'},
+  {a:'📦 8千克',b:'🍚 7000克',unit:'千克'},
+  {a:'🛳️ 30吨',b:'🐘 4000千克',unit:'千克'},
+  {a:'🪙 2千克',b:'🧂 2500克',unit:'克'},
+  {a:'💧 1千克',b:'🍬 900克',unit:'克'},
+  {a:'🐕 12千克',b:'🐈 3000克',unit:'千克'}
+];
+var DROP_POOL=[
+  {icon:'🥚',name:'鸡蛋',m:50,u:'g'},
+  {icon:'🍬',name:'糖果',m:5,u:'g'},
+  {icon:'📖',name:'数学书',m:300,u:'g'},
+  {icon:'🪙',name:'硬币',m:3,u:'g'},
+  {icon:'🧒',name:'小学生',m:30,u:'kg'},
+  {icon:'🐕',name:'小狗',m:8,u:'kg'},
+  {icon:'🧺',name:'一袋米',m:25,u:'kg'},
+  {icon:'🐘',name:'大象',m:4,u:'t'},
+  {icon:'🚗',name:'小汽车',m:1,u:'t'},
+  {icon:'🛳️',name:'轮船',m:5000,u:'t'}
+];
+
+/* ===================== 场景：标题 ===================== */
+registerScene('title', function(){
+  return '<div class="scene" id="scene-title">'
+    + '<div class="sun">🌞</div>'
+    + '<div class="cloud" style="top:24px;animation-duration:34s">☁️</div>'
+    + '<div class="cloud" style="top:86px;animation-duration:48s;animation-delay:-18s;font-size:32px">☁️</div>'
+    + '<div class="t-hero">'
+    +   '<div class="t-elephant">🐘</div>'
+    +   '<div class="t-boat">⛵</div>'
+    +   '<div class="t-wave">🌊🌊🌊</div>'
+    + '</div>'
+    + '<h1 class="t-title">曹冲称象<br>的质量王国</h1>'
+    + '<p class="t-sub">WEIGHT KINGDOM · 帮小曹冲把大象称出来</p>'
+    + '<div class="t-start"><button class="btn primary big" onclick="startGame()">🚀 开始冒险</button></div>'
+    + '<p class="t-note">三年级上册 · 综合实践《曹冲称象的故事》</p>'
+    + '</div>';
+}, function(){}, function(){});
+
+/* ===================== 场景：故事 ===================== */
+var storyIdx=0;
+registerScene('story', function(){
+  storyIdx=0;
+  return '<div class="scene" id="scene-story"><div class="story-box panel">'
+    + '<div class="story-avatar" id="storyAvatar">📜</div>'
+    + '<div class="story-bubble"><span class="story-step" id="storyStep">1 / 6</span><div id="storyText">'+STORY[0].txt+'</div></div>'
+    + '<div class="story-nav">'
+    +   '<button class="btn ghost" onclick="prevStory()">← 上一页</button>'
+    +   '<div class="story-dots" id="storyDots"></div>'
+    +   '<button class="btn primary" id="storyNext" onclick="nextStory()">下一页 →</button>'
+    + '</div></div></div>';
+}, function(){
+  drawStoryDots();
+}, function(){});
+function drawStoryDots(){
+  var h='';for(var i=0;i<STORY.length;i++){h+='<i class="'+(i===storyIdx?'on':'')+'"></i>';}
+  el('storyDots').innerHTML=h;
+  el('storyAvatar').textContent=STORY[storyIdx].who;
+  el('storyText').textContent=STORY[storyIdx].txt;
+  el('storyStep').textContent=(storyIdx+1)+' / '+STORY.length;
+  el('storyNext').textContent=(storyIdx===STORY.length-1)?'开始闯关 🚀':'下一页 →';
+}
+function nextStory(){SFX.click();storyIdx++;if(storyIdx>=STORY.length){showScene('map');return;}drawStoryDots();}
+function prevStory(){SFX.click();if(storyIdx>0){storyIdx--;drawStoryDots();}}
+
+/* ===================== 场景：关卡地图 ===================== */
+registerScene('map', function(){
+  var h='<div class="scene" id="scene-map">'
+    + '<div class="map-head"><div class="map-title">🗺️ 称象河之旅</div><div class="map-sub">完成一个关卡，解锁下一个</div></div>'
+    + '<div class="river">';
+  for(var i=0;i<LEVELS.length;i++){
+    var lv=LEVELS[i],locked=lv.id>G.unlocked;
+    var done=G.done[lv.id];
+    h+='<div class="stage'+(locked?' locked':'')+(done?' done':'')+'" '+(locked?'':'onclick="openLevel('+lv.id+')"')+'>'
+      + '<span class="s-num">'+(done?'✓':'第 '+lv.id+' 关')+'</span>'
+      + '<div class="s-icon">'+(locked?'🔒':lv.icon)+'</div>'
+      + '<div class="s-info"><div class="s-name">'+lv.name+'</div><div class="s-en">'+lv.en+'</div><div class="s-desc">'+(locked?'先闯过前面的关卡':'点击开始')+'</div></div>'
+      + '<div class="s-stars">'+(locked?'':starStr(G.stars[lv.id]||0))+'</div>'
+      + '</div>';
+  }
+  h+='</div>';
+  h+='<div class="badge-banner" id="badgeBanner">🏅 称象小达人徽章<br><small>5 个关卡全部通关 · Weighing Master Badge</small></div>';
+  h+='<div class="map-foot"><button class="btn ghost" onclick="resetAll()">🗑 重置进度</button></div>';
+  return h+'</div>';
+}, function(){
+  var all=LEVELS.every(function(l){return G.done[l.id];});
+  var b=el('badgeBanner');if(b){b.style.display=all?'block':'none';}
+}, function(){});
+function resetAll(){
+  if(confirm('确定要清空所有星星和进度吗？')){
+    G={unlocked:1,stars:{},best:{},muted:G.muted,done:{}};
+    save();showScene('map');
+  }
+}
+
+/* ===================== 场景：实验（船） ===================== */
+var Exp={level:1,bags:[],placed:[],mistakes:0,done:false,overWarn:false};
+registerScene('boat', function(){
+  ExpData=BOAT_LEVELS[Exp.level];
+  var lv=LEVELS[Exp.level-1];
+  return '<div class="scene" id="scene-boat">'
+    + '<div class="back-row"><button class="btn ghost" onclick="showScene(\'map\')">← 地图</button><h2>'+lv.icon+' '+lv.name+'</h2><span class="chip en">'+lv.en+'</span></div>'
+    + '<div class="tip-wrap" style="margin-top:10px">'
+    +   '<button class="tip-btn" onclick="toggleTip(this)">💡 教学提示 ▾</button>'
+    +   '<div class="script-card">'+lv.tip+'</div>'
+    + '</div>'
+    + '<div class="exp-wrap" style="margin-top:10px">'
+    +   '<div class="river-scene" id="riverScene">'
+    +     '<span class="sky-deco" style="top:8px;left:10px">☁️</span><span class="sky-deco" style="top:20px;right:16px">🦢</span>'
+    +     '<div class="target-line" id="targetLine"></div>'
+    +     '<div class="target-label" id="targetLabel"></div>'
+    +     '<div class="waterline-mark"></div>'
+    +     '<div class="boat-box" id="boatBox"><div class="bag-on-boat" id="bagsOnBoat"></div><svg class="boat-svg" width="230" height="90" viewBox="0 0 230 90">'
+    +       '<path d="M20 28 L62 74 Q115 92 168 74 L210 28 Q130 46 20 28 Z" fill="#a4713c" stroke="#6d4a22" stroke-width="4"/>'
+    +       '<path d="M20 28 L210 28" stroke="#6d4a22" stroke-width="4"/>'
+    +     '</svg></div>'
+    +     '<div class="wave-layer"></div>'
+    +   '</div>'
+    +   '<div class="goal-bar">'
+    +     '<div class="goal-txt">🎯 目标：<b>'+ExpData.tLabel+'</b></div>'
+    +     '<div class="now-txt">⚖️ 船上：<b id="nowWeight">0</b></div>'
+    +   '</div>'
+    +   '<div class="palette" id="palette"></div>'
+    +   '<div class="btn-row"><button class="btn" onclick="clearBoat()">🧹 全部拿下来</button></div>'
+    +   '<div class="success-overlay" id="successOverlay">'
+    +     '<div class="succ-card">'
+    +       '<div class="big">🎉</div>'
+    +       '<div class="succ-tag">任务完成</div>'
+    +       '<h3 id="succTitle">称出来了！</h3>'
+    +       '<div class="stars" id="succStars"></div>'
+    +       '<div class="succ-msg" id="succMsg"></div>'
+    +       '<button class="btn primary big" id="succBtn" onclick="boatContinue()" style="margin-top:14px">继续 ➜</button>'
+    +     '</div>'
+    +   '</div>'
+    + '</div></div>';
+}, function(){
+  ExpData=BOAT_LEVELS[Exp.level];
+  if(!ExpData){ showToast('关卡数据丢失'); showScene('map'); return; }
+  Exp.bags=[];Exp.placed=[];Exp.mistakes=0;Exp.done=false;Exp.overWarn=false;
+  drawPalette();drawBoatBags();updateWater();
+  var tl=el('targetLine'),lb=el('targetLabel');
+  // 船初始顶部 50px，船高 90px，船底初始 140；满重量船底到 195（水面 196）
+  var targetBottom=140+(ExpData.target/ExpData.max)*55;
+  tl.style.top=(targetBottom-4)+'px';lb.style.top=(targetBottom-28)+'px';lb.textContent='目标 '+ExpData.tLabel;
+}, function(){});
+var ExpData=null;
+function bagSVG(w){
+  var colors={1000000:'#f76d6d',500000:'#ff9f43',2000:'#4f9dff',1000:'#7ed7a5',500:'#c98df7'};
+  var c=colors[w]||'#4f9dff';
+  return '<svg viewBox="0 0 74 74" aria-hidden="true">'
+    + '<rect x="10" y="8" width="54" height="58" rx="10" fill="'+c+'" stroke="#333" stroke-width="4"/>'
+    + '<path d="M18 18 Q37 6 56 18" fill="none" stroke="#333" stroke-width="4" stroke-linecap="round"/>'
+    + '<line x1="18" y1="46" x2="56" y2="46" stroke="rgba(255,255,255,.45)" stroke-width="3" stroke-linecap="round"/>'
+    + '</svg>';
+}
+function bagLabel(w){
+  if(w>=1000000){return {n:(w/1000000)+' 吨',sub:'t'};}
+  if(w%1000===0){return {n:(w/1000)+' 千克',sub:'kg'};}
+  return {n:w+' 克',sub:'g'};
+}
+function drawPalette(){
+  var p=el('palette');var h='';
+  for(var i=0;i<ExpData.bags.length;i++){
+    var b=ExpData.bags[i],lb=bagLabel(b.w);
+    h+='<div class="bag" data-i="'+i+'" data-w="'+b.w+'" style="background:transparent" onpointerdown="dragBagStart(event,'+i+')">'+bagSVG(b.w)
+      + '<span class="bag-label">'+lb.n+'<span class="bag-sub">'+lb.sub+'</span></span></div>';
+  }
+  p.innerHTML=h;
+}
+function drawBoatBags(){
+  var c=el('bagsOnBoat');var h='';
+  var boat=el('boatBox');
+  if(boat){boat.classList.add('settled');}
+  // 船上空间自适应：最多 5 个砝码并排，宽度 = 容器 230px / 数量，居中排列
+  var count=Math.max(1,Exp.placed.length);
+  var slotW=Math.min(46,Math.floor(214/count));
+  var bagW=Math.min(44,slotW-2);
+  var startX=Math.floor((230-count*slotW)/2);
+  for(var i=0;i<Exp.placed.length;i++){
+    var w=Exp.placed[i],lb=bagLabel(w);
+    var leftPx=startX+i*slotW;
+    h+='<div class="bag" data-boat="1" style="left:'+leftPx+'px;top:0;width:'+bagW+'px;height:'+bagW+'px" onpointerdown="removeBoatBag('+i+')" title="点我拿下来">'+bagSVG(w)
+      + '<span class="bag-label" style="font-size:'+(bagW<40?'10px':'11px')+'">'+lb.n+'</span></div>';
+  }
+  c.innerHTML=h;
+}
+var drag=null;
+function dragBagStart(ev,idx){
+  if(Exp.done)return;
+  SFX.pop();
+  var bag=ev.currentTarget;
+  var rect=bag.getBoundingClientRect();
+  var ghost=bag.cloneNode(true);
+  ghost.classList.add('dragging');
+  ghost.style.width=rect.width+'px';ghost.style.height=rect.height+'px';
+  ghost.style.left=(ev.clientX-rect.width/2)+'px';ghost.style.top=(ev.clientY-rect.height/2)+'px';
+  document.body.appendChild(ghost);
+  drag={i:idx,ghost:ghost,dx:ev.clientX-rect.left-rect.width/2,dy:ev.clientY-rect.top-rect.height/2};
+  bag.style.opacity='.25';
+  window.addEventListener('pointermove',dragMove);
+  window.addEventListener('pointerup',dragEnd);
+}
+function dragMove(ev){
+  if(!drag)return;
+  drag.ghost.style.left=(ev.clientX-drag.dx)+'px';
+  drag.ghost.style.top=(ev.clientY-drag.dy)+'px';
+}
+function dragEnd(ev){
+  if(!drag)return;
+  var g=drag.ghost,gx=ev.clientX,gy=ev.clientY;
+  var river=el('riverScene').getBoundingClientRect();
+  var boat=el('boatBox').getBoundingClientRect();
+  // 宽容判定：只要砝码落在船的附近区域就算放置成功
+  var padX=Math.max(80,boat.width*0.45);
+  var padTop=70,padBottom=70;
+  var overBoat=gx>boat.left-padX&&gx<boat.right+padX&&gy>boat.top-padTop&&gy<boat.bottom+padBottom;
+  if(overBoat){
+    var w=ExpData.bags[drag.i].w;
+    Exp.placed.push(w);
+    SFX.plop();
+  }else{
+    SFX.tap();
+  }
+  g.remove();
+  drag=null;
+  $$('#palette .bag').forEach(function(b){b.style.opacity='';});
+  window.removeEventListener('pointermove',dragMove);
+  window.removeEventListener('pointerup',dragEnd);
+  drawBoatBags();updateWater();
+}
+function removeBoatBag(i){
+  if(Exp.done)return;
+  SFX.pop();
+  Exp.placed.splice(i,1);
+  drawBoatBags();updateWater();
+}
+function clearBoat(){
+  if(!Exp.placed.length)return;
+  SFX.tap();
+  Exp.placed=[];
+  drawBoatBags();updateWater();
+}
+function nowWeight(){
+  var s=0;for(var i=0;i<Exp.placed.length;i++){s+=Exp.placed[i];}
+  return s;
+}
+function fmtWeight(w){
+  if(w>=1000000&&w%1000000===0){return (w/1000000)+' 吨';}
+  if(w>=1000&&w%1000===0){return (w/1000)+' 千克';}
+  if(w>=1000){return (w/1000).toFixed(1).replace(/\.0$/,'')+' 千克';}
+  return w+' 克';
+}
+function updateWater(){
+  if(!ExpData)return;
+  var w=nowWeight();
+  el('nowWeight').textContent=fmtWeight(w);
+  var max=ExpData.max;
+  // 船随重量下沉：0 重量顶部 50，满重量顶部 105（船底到 195 贴水面）
+  var sink=Math.min(55,w/max*55);
+  var boat=el('boatBox');
+  boat.style.top=(80+sink)+'px';
+  var tl=el('targetLine');
+  var targetTop=(140+(ExpData.target/max)*55)-4;
+  tl.style.top=targetTop+'px';
+  var ok=(w===ExpData.target);
+  if(ok&&!Exp.done){Exp.done=true;onBoatSuccess();}
+  else if(w>ExpData.target&&!Exp.done){
+    tl.style.borderTopColor='#d64550';
+    el('nowWeight').parentNode.style.color='#d64550';
+    if(!Exp.overWarn){
+      Exp.overWarn=true;
+      var r=el('riverScene').getBoundingClientRect();
+      floatText(r.left+r.width/2,r.top+60,'太重啦！拿下来一些', '#d64550');
+    }
+  }else if(!Exp.done){
+    tl.style.borderTopColor='#d64550';
+    Exp.overWarn=false;
+    el('nowWeight').parentNode.style.color='';
+  }
+}
+function onBoatSuccess(){
+  SFX.success();
+  var r=el('riverScene').getBoundingClientRect();
+  burst(r.left+r.width/2,r.top+80,{n:60,spreadX:380,up:300});
+  var st=Exp.mistakes<=0?3:(Exp.mistakes<=1?2:1);
+  G.stars[Exp.level]=Math.max(G.stars[Exp.level]||0,st);
+  G.best[Exp.level]=Math.max(G.best[Exp.level]||0,st);
+  G.done[Exp.level]=true;
+  if(Exp.level<5){G.unlocked=Math.max(G.unlocked,Exp.level+1);}
+  save();
+  el('succStars').innerHTML=starStr(st);
+  el('succMsg').textContent=Exp.level===5?'小讲堂开张啦！你已经是称象小达人！':'石头的总重量 = 大象的重量，等量代换成功！';
+  el('succBtn').textContent=Exp.level<5?'下一站 ➜':'回到地图 🏠';
+  el('successOverlay').classList.add('show');
+  el('successOverlay').style.display='flex';
+}
+function boatContinue(){
+  SFX.click();
+  if(Exp.level===1){Exp.level=2;ExpData=BOAT_LEVELS[2];showScene('boat');}
+  else if(Exp.level===2){showScene('seesaw');}
+  else if(Exp.level===5){showScene('map');}
+}
+
+/* ===================== 场景：跷跷板 ===================== */
+var Cmp={idx:0,correct:0};
+registerScene('seesaw', function(){
+  return '<div class="scene" id="scene-seesaw">'
+    + '<div class="back-row"><button class="btn ghost" onclick="showScene(\'map\')">← 地图</button><h2>⚖️ 称重大挑战</h2><span class="chip en">WEIGHING CHALLENGE</span></div>'
+    + '<div class="tip-wrap" style="margin-top:10px"><button class="tip-btn" onclick="toggleTip(this)">💡 教学提示 ▾</button>'
+    + '<div class="script-card">'+LEVELS[2].tip+'</div></div>'
+    + '<div class="seesaw-scene" style="margin-top:12px">'
+    +   '<div class="seesaw-stage" id="ssStage">'
+    +     '<span class="seesaw-item si-l" id="ssItemL"></span><span class="seesaw-item si-r" id="ssItemR"></span>'
+    +     '<div class="seesaw-label sL" id="ssLabelL"></div><div class="seesaw-label sR" id="ssLabelR"></div>'
+    +     '<div class="seesaw-board"></div><div class="seesaw-pivot"></div>'
+    +   '</div>'
+    +   '<div class="ground"></div>'
+    + '</div>'
+    + '<div class="q-item" id="ssQ"></div>'
+    + '<div class="cmp-opts">'
+    +   '<button class="cmp-opt" onclick="cmpAnswer(\'L\')">左边重 ⬅️</button>'
+    +   '<button class="cmp-opt" onclick="cmpAnswer(\'=\')">一样重 ⚖️</button>'
+    +   '<button class="cmp-opt" onclick="cmpAnswer(\'R\')">右边重 ➡️</button>'
+    + '</div>'
+    + '<div class="cmp-fb" id="ssFb"></div>'
+    + '</div>';
+}, function(){
+  Cmp.idx=0;Cmp.correct=0;nextCmp();
+}, function(){});
+function parseMass(t){
+  var m=t.match(/([\d.]+)\s*(克|千克|吨)/);
+  if(!m)return null;
+  var v=parseFloat(m[1]);
+  if(m[2]==='吨')return v*1000000;
+  if(m[2]==='千克')return v*1000;
+  return v;
+}
+function nextCmp(){
+  if(Cmp.correct>=4){onCmpWin();return;}
+  var pool=shuffle(COMPARE_POOL.slice());
+  var it=pool[0];
+  var aM=parseMass(it.a),bM=parseMass(it.b);
+  var left,right;
+  if(Math.random()<0.5){left=it.a;right=it.b;}else{left=it.b;right=it.a;}
+  Cmp.cur={left:left,right:right,leftM:parseMass(left),rightM:parseMass(right),answered:false};
+  el('ssItemL').textContent=left.split(' ')[0];
+  el('ssItemR').textContent=right.split(' ')[0];
+  el('ssLabelL').textContent=left.split(' ')[1];
+  el('ssLabelR').textContent=right.split(' ')[1];
+  el('ssQ').textContent='第 '+(Cmp.correct+1)+' 题：谁更重？先在心里换算成克哦';
+  el('ssFb').textContent='';
+  el('ssStage').style.transform='translateX(-50%) rotate(0deg)';
+}
+function cmpAnswer(side){
+  if(Cmp.cur.answered)return;
+  Cmp.cur.answered=true;
+  var lM=Cmp.cur.leftM,rM=Cmp.cur.rightM,ans;
+  if(lM>rM){ans='L';}else if(lM<rM){ans='R';}else{ans='=';}
+  var ok=(side===ans);
+  var stage=el('ssStage');
+  if(lM>rM){stage.style.transform='translateX(-50%) rotate(-12deg)';}
+  else if(lM<rM){stage.style.transform='translateX(-50%) rotate(12deg)';}
+  if(ok){
+    SFX.good();Cmp.correct++;
+    el('ssFb').innerHTML='✅ 答对啦！';
+    var scEl=el('seesaw-scene');
+    if(scEl){var sc=scEl.getBoundingClientRect();burst(sc.left+sc.width/2,sc.top+70,{n:30,spreadX:260,up:200});}
+  }else{
+    SFX.bad();
+    el('ssFb').innerHTML='❌ 再想想：换算成一样的单位再比（'+(lM>rM?'左边重':(lM<rM?'右边重':'一样重'))+'）';
+  }
+  setTimeout(function(){
+    if(ok){nextCmp();}
+    else{el('ssFb').textContent='';Cmp.cur.answered=false;}
+  },1600);
+}
+function onCmpWin(){
+  SFX.success();
+  var st=3;
+  G.stars[3]=Math.max(G.stars[3]||0,st);
+  G.done[3]=true;G.unlocked=Math.max(G.unlocked,4);
+  save();
+  var scEl=el('seesaw-scene');
+  if(scEl){var sc=scEl.getBoundingClientRect();burst(sc.left+sc.width/2,sc.top+60,{n:60,spreadX:340,up:280});}
+  var fb=el('ssFb');if(fb){fb.innerHTML='🎉 挑战成功！';}
+  setTimeout(function(){
+    if(confirm('挑战完成！去下一关？')){
+      openLevel(4);
+    }else{showScene('map');}
+  },900);
+}
+
+/* ===================== 场景：掂一掂分类 ===================== */
+var Drop={items:[],idx:0,okCount:0,mistakes:0};
+registerScene('drop', function(){
+  return '<div class="scene" id="scene-drop">'
+    + '<div class="back-row"><button class="btn ghost" onclick="showScene(\'map\')">← 地图</button><h2>🕵️ 掂一掂</h2><span class="chip en">FEEL & CHOOSE</span></div>'
+    + '<div class="tip-wrap" style="margin-top:10px"><button class="tip-btn" onclick="toggleTip(this)">💡 教学提示 ▾</button>'
+    + '<div class="script-card">'+LEVELS[3].tip+'</div></div>'
+    + '<div class="drop-scene" style="margin-top:12px">'
+    +   '<div class="drop-item" id="dropItem" onpointerdown="dropStart(event)">🥚</div>'
+    +   '<div class="drop-bins">'
+    +     '<div class="bin" id="bin-g" data-u="g"><span class="b-icon">🪶</span>克 g<br><small>很轻</small></div>'
+    +     '<div class="bin" id="bin-kg" data-u="kg"><span class="b-icon">🧺</span>千克 kg<br><small>一般</small></div>'
+    +     '<div class="bin" id="bin-t" data-u="t"><span class="b-icon">🐘</span>吨 t<br><small>很重</small></div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="drop-q" id="dropQ"></div>'
+    + '<div class="drop-fb" id="dropFb"></div>'
+    + '</div>';
+}, function(){
+  Drop.items=shuffle(DROP_POOL.slice()).slice(0,8);
+  Drop.idx=0;Drop.okCount=0;Drop.mistakes=0;nextDrop();
+}, function(){});
+var dropDrag=null;
+function dropStart(ev){
+  if(Drop.idx>=Drop.items.length)return;
+  SFX.pop();
+  var item=el('dropItem');
+  var rect=item.getBoundingClientRect();
+  var ghost=item.cloneNode(true);
+  ghost.classList.add('dragging');
+  ghost.style.left=(ev.clientX-rect.width/2)+'px';
+  ghost.style.top=(ev.clientY-rect.height/2)+'px';
+  document.body.appendChild(ghost);
+  dropDrag={ghost:ghost};
+  item.style.opacity='.2';
+  window.addEventListener('pointermove',dropMove);
+  window.addEventListener('pointerup',dropEnd);
+}
+function dropMove(ev){
+  if(!dropDrag)return;
+  dropDrag.ghost.style.left=(ev.clientX-28)+'px';
+  dropDrag.ghost.style.top=(ev.clientY-28)+'px';
+  $$('.bin').forEach(function(b){
+    var r=b.getBoundingClientRect();
+    b.classList.toggle('hover',ev.clientX>r.left&&ev.clientX<r.right&&ev.clientY>r.top&&ev.clientY<r.bottom);
+  });
+}
+function dropEnd(ev){
+  if(!dropDrag)return;
+  var target=null;
+  $$('.bin').forEach(function(b){
+    var r=b.getBoundingClientRect();
+    if(ev.clientX>r.left&&ev.clientX<r.right&&ev.clientY>r.top&&ev.clientY<r.bottom){target=b;}
+    b.classList.remove('hover');
+  });
+  var it=Drop.items[Drop.idx];
+  if(target){
+    var ok=(target.getAttribute('data-u')===it.u);
+    if(ok){SFX.drop();Drop.okCount++;}
+    else{SFX.bad();Drop.mistakes++;}
+    burst(ev.clientX,ev.clientY,{n:ok?26:10,colors:ok?['#7ed7a5','#ffd54f']:['#d64550','#ff9f43'],round:true,spreadX:160,up:180});
+    el('dropFb').innerHTML=ok?('✅ '+it.name+'（'+it.m+' '+unitName(it.u)+'）放进去了！'):('❌ 想一想：'+it.name+'应该用哪个单位？');
+    setTimeout(function(){el('dropFb').textContent='';Drop.idx++;nextDrop();},1100);
+  }else{
+    SFX.tap();
+    el('dropFb').textContent='把它拖到下面的筐里';
+    setTimeout(function(){el('dropFb').textContent='';},800);
+  }
+  dropDrag.ghost.remove();dropDrag=null;
+  el('dropItem').style.opacity='';
+  window.removeEventListener('pointermove',dropMove);
+  window.removeEventListener('pointerup',dropEnd);
+}
+function unitName(u){return u==='g'?'克':(u==='kg'?'千克':'吨');}
+function nextDrop(){
+  if(Drop.idx>=Drop.items.length){onDropWin();return;}
+  var it=Drop.items[Drop.idx];
+  el('dropItem').textContent=it.icon;
+  el('dropQ').textContent='第 '+(Drop.idx+1)+' / 8：'+it.name+'（'+it.m+'）应该用哪个单位？把它拖进筐里';
+}
+function onDropWin(){
+  SFX.success();
+  var st=Drop.mistakes<=1?3:(Drop.mistakes<=3?2:1);
+  G.stars[4]=Math.max(G.stars[4]||0,st);
+  G.done[4]=true;G.unlocked=Math.max(G.unlocked,5);
+  save();
+  var scEl=el('drop-scene');
+  if(scEl){var sc=scEl.getBoundingClientRect();burst(sc.left+sc.width/2,sc.top+70,{n:60,spreadX:340,up:280});}
+  el('dropQ').textContent='🎉 全部放对啦！你分得清克、千克、吨了！';
+  setTimeout(function(){
+    if(confirm('去最后一关：质量小讲堂？')){
+      openLevel(5);
+    }else{showScene('map');}
+  },1000);
+}
+
+/* ===================== 场景切换入口 ===================== */
+function startGame(){SFX.click();showScene('story');}
+function openLevel(id){
+  SFX.click();
+  if(id===3){showScene('seesaw');}
+  else if(id===4){showScene('drop');}
+  else{Exp.level=id;ExpData=BOAT_LEVELS[id];showScene('boat');}
+}
+function toggleTip(btn){
+  var card=btn.parentNode.querySelector('.script-card');
+  var open=card.style.display!=='none';
+  card.style.display=open?'none':'block';
+  btn.textContent=open?'💡 教学提示 ▾':'收起提示 ▴';
+  SFX.tap();
+}
+
+/* ===================== 启动 ===================== */
+load();
+el('muteBtn').textContent=G.muted?'🔇':'🔊';
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden){clearParticles();}
+});
+startLoop();
+showScene('title');
+</script>
+</body>
+</html>

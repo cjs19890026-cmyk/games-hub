@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小小测量师大冒险 Little Measurer Adventure</title>
+<style>
+  :root{
+    --ink:#333333;      /* 正文黑字 */
+    --title:#111111;    /* 标题黑 */
+    --en:#2c3e9b;       /* EN 蓝 */
+    --zh:#c44569;       /* ZH 粉 */
+    --hl:#ff8f3f;       /* 高亮橙 */
+    --line:#333333;
+    --star:#f5b301;     /* 星星金 */
+    --ok:#2e9e5b;       /* 答对绿 */
+    --bad:#d64550;      /* 答错红 */
+    --card:#ffffff;     /* 控件白底 */
+    --page:#fdfbf7;
+
+    --pink:#ff8fb2;   --pink-soft:#ffe3ec;
+    --orange:#ff9f5a; --orange-soft:#ffe7d1;
+    --green:#45c486;  --green-soft:#d9f5e7;
+    --purple:#8f7bf0; --purple-soft:#e6e0fd;
+    --blue:#4f9dff;   --blue-soft:#dcebff;
+    --lemon:#ffd54f;  --lemon-soft:#fff3c9;
+    --aqua:#43d4e6;
+    --btn-shadow:#ffc6d8;
+    --btn-shadow-blue:#b9d0ff;
+    --card-shadow:#e6dfd2;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(#ffffff 1.6px, transparent 1.6px) 0 0 / 26px 26px,
+      linear-gradient(180deg,#7ecdf6 0%,#b4e6fb 38%,#e9f8ff 62%,#fff3d6 100%);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:20px; line-height:1.6;
+  }
+  :focus-visible{ outline:3px solid var(--blue); outline-offset:3px; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 64px; position:relative; z-index:1; }
+
+  /* ---------- 卡通天空背景装饰 ---------- */
+  .bg-deco{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .bg-deco span{ position:absolute; display:block; line-height:1; user-select:none; }
+  .d-sun{ top:22px; left:3%; font-size:86px; filter:drop-shadow(0 8px 12px rgba(255,175,40,.45)); animation:sunPulse 6s ease-in-out infinite; }
+  .d-cloud{ font-size:96px; opacity:.92; filter:drop-shadow(0 8px 12px rgba(70,140,190,.25)); animation:sway 9s ease-in-out infinite; }
+  .c1{ top:52px; right:6%; }
+  .c2{ top:225px; left:4%; font-size:64px; opacity:.85; animation-delay:1.2s; }
+  .c3{ top:46%; right:3%; font-size:58px; opacity:.8; animation-delay:2.3s; }
+  .d-abacus{ top:17%; left:36%; font-size:46px; animation:bob 4.8s ease-in-out infinite; }
+  .d-plus{ top:29%; right:12%; font-size:44px; animation:twinkle 3.2s ease-in-out infinite; }
+  .d-eq{ top:12%; right:26%; font-size:36px; animation:bob 5.4s ease-in-out infinite; }
+  .d-balloon{ font-size:52px; animation:bob 4.6s ease-in-out infinite; filter:drop-shadow(0 6px 8px rgba(0,0,0,.14)); }
+  .b1{ top:44%; left:2%; animation-delay:.5s; }
+  .b2{ top:58%; right:5%; font-size:42px; animation-delay:1.3s; }
+  .d-star{ font-size:34px; animation:twinkle 3s ease-in-out infinite; }
+  .s1{ top:31%; right:17%; animation-delay:.4s; }
+  .s2{ top:52%; left:11%; font-size:26px; animation-delay:1s; }
+  .s3{ top:14%; left:58%; font-size:24px; animation-delay:1.7s; }
+  .d-pencil{ bottom:26px; right:6%; font-size:54px; animation:bob 5s ease-in-out infinite; }
+  .d-hill{ position:absolute; bottom:-70px; left:-6%; width:62%; height:230px; background:linear-gradient(180deg,#7ce0b8,#4fc58e); border-radius:50% 50% 0 0 / 100% 100% 0 0; opacity:.5; }
+  .h2{ left:44%; width:70%; height:270px; background:linear-gradient(180deg,#9be8c8,#64d6a2); opacity:.38; }
+
+  @keyframes sunPulse{ 0%,100%{ transform:scale(1) rotate(0deg);} 50%{ transform:scale(1.07) rotate(5deg);} }
+  @keyframes sway{ 0%,100%{ transform:translateX(-12px);} 50%{ transform:translateX(12px);} }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-15px) rotate(2deg);} }
+  @keyframes twinkle{ 0%,100%{ opacity:.45; transform:scale(.9);} 50%{ opacity:1; transform:scale(1.18);} }
+  @keyframes confFall{ 0%{ transform:translateY(-40px) rotate(0deg); opacity:1;} 100%{ transform:translateY(600px) rotate(300deg); opacity:.1; } }
+  @keyframes cardIn{ 0%{ opacity:0; transform:translateY(16px) scale(.97);} 100%{ opacity:1; transform:none; } }
+  @keyframes pop{ 0%{ transform:scale(.97);} 100%{ transform:scale(1);} }
+  @keyframes blinkRed{ 0%,100%{ opacity:1;} 50%{ opacity:.35;} }
+
+  /* ---------- 通用控件（全部白底黑字，不透明） ---------- */
+  .btn{
+    background:var(--card); color:var(--ink);
+    border:3px solid var(--ink); border-radius:18px;
+    padding:18px 28px; font-size:26px; font-weight:700;
+    cursor:pointer; user-select:none; touch-action:manipulation;
+    box-shadow:0 5px 0 var(--btn-shadow);
+    transition:transform .12s, box-shadow .12s, background-color .15s, color .15s;
+  }
+  .btn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .btn:disabled{ background:#eeeeee; color:#999999; border-color:#bbbbbb; box-shadow:0 4px 0 #dddddd; cursor:not-allowed; }
+  .btn.primary{ border-color:var(--en); color:var(--en); box-shadow:0 5px 0 var(--btn-shadow-blue); }
+  .btn.primary:hover:not(:disabled){ box-shadow:0 7px 0 var(--btn-shadow-blue); }
+  .btn.primary:active{ box-shadow:0 1px 0 var(--btn-shadow-blue); }
+  .btn.small{ font-size:20px; padding:10px 18px; border-radius:14px; box-shadow:0 4px 0 var(--btn-shadow); }
+  .btn.small:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--btn-shadow); }
+
+  .card{
+    background:var(--card); border:3px solid var(--ink);
+    border-radius:22px; padding:22px; box-shadow:0 5px 0 var(--card-shadow);
+  }
+  .en{ color:var(--en); }
+  .zh{ color:var(--zh); }
+
+  /* ---------- 首页 ---------- */
+  .home-title{ font-size:54px; font-weight:900; color:var(--title); margin:14px 0 4px; text-align:center; letter-spacing:2px; text-wrap:balance; }
+  .home-title .t-emoji{ display:inline-block; font-size:.68em; vertical-align:middle; animation:bob 4s ease-in-out infinite; }
+  .home-title .t-emoji.e2{ animation-delay:1.1s; }
+  .home-under{ display:block; width:min(340px,72%); height:14px; margin:10px auto 8px; }
+  .home-sub{ font-size:24px; color:var(--title); text-align:center; margin:0 0 8px; font-weight:700; }
+  .home-tip{ text-align:center; margin:0 0 26px; }
+  .map{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
+  .level-card{ text-align:center; cursor:pointer; border-color:var(--lv); box-shadow:0 6px 0 var(--lv-shadow); animation:cardIn .45s both; transition:transform .15s, box-shadow .15s; }
+  .level-card:nth-child(2){ animation-delay:.06s; }
+  .level-card:nth-child(3){ animation-delay:.12s; }
+  .level-card:nth-child(4){ animation-delay:.18s; }
+  .level-card:hover{ transform:translateY(-4px); box-shadow:0 10px 0 var(--lv-shadow); }
+  .level-card:hover .icon{ transform:rotate(-8deg) scale(1.08); }
+  .level-card:active{ transform:translateY(0); box-shadow:0 2px 0 var(--lv-shadow); }
+  .lv1{ --lv:var(--pink);   --lv-shadow:#ffc9d9; }
+  .lv2{ --lv:var(--blue);   --lv-shadow:#b9d0ff; }
+  .lv3{ --lv:var(--green);  --lv-shadow:#bcead3; }
+  .lv4{ --lv:var(--purple); --lv-shadow:#cfc5f8; }
+  .lv5{ --lv:var(--lemon); --lv-shadow:#f1df9e; }
+  .d-ruler{ top:6%; right:36%; font-size:46px; animation:bob 5.2s ease-in-out infinite; }
+  .d-tree{ bottom:84px; left:24%; font-size:58px; animation:bob 6s ease-in-out infinite; }
+  .badge-banner{
+    margin:22px auto 0; max-width:620px; text-align:center;
+    background:linear-gradient(90deg,#fff8e1,#fff3c9);
+    border:3px solid var(--star); border-radius:20px; padding:16px 18px;
+    font-size:26px; font-weight:900; color:var(--title); box-shadow:0 5px 0 #f1df9e;
+  }
+  .badge-banner small{ display:block; font-size:17px; font-weight:700; color:var(--zh); margin-top:4px; }
+  .ruler-box{ margin:12px auto 2px; max-width:720px; }
+  .ruler-box svg{ width:100%; height:auto; display:block; }
+  .unit-opt .sym{ display:block; font-size:17px; font-weight:800; color:var(--en); letter-spacing:.5px; }
+  .q-unitline{ font-size:36px; font-weight:900; color:var(--title); text-align:center; margin:10px 0 4px; letter-spacing:1px; }
+  .sort-wrap{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+  .sort-slots{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+  .sort-slot{
+    width:86px; height:86px; display:flex; align-items:center; justify-content:center;
+    background:#fbf9f3; border:3px dashed #c9c2b2; border-radius:16px;
+    font-size:28px; font-weight:900; color:var(--ink); position:relative;
+  }
+  .sort-slot.filled{ background:var(--card); border-style:solid; border-color:var(--en); box-shadow:0 4px 0 var(--btn-shadow-blue); }
+  .sort-slot .no{ position:absolute; top:-10px; left:-10px; background:var(--zh); color:#fff; font-size:14px; font-weight:800; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .sort-chips{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .sort-chip{
+    background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:16px;
+    padding:12px 18px; font-size:26px; font-weight:900; cursor:pointer; box-shadow:0 5px 0 var(--btn-shadow);
+    user-select:none; min-width:104px; text-align:center;
+  }
+  .sort-chip:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .sort-chip.used{ background:#f0f0f0; color:#aaaaaa; border-color:#cccccc; cursor:not-allowed; box-shadow:0 4px 0 #dddddd; }
+  .sort-chip.ok{ background:#e7f6ec; border-color:var(--ok); color:var(--ok); }
+  .sort-chip.bad{ background:#fdecea; border-color:var(--bad); color:var(--bad); }
+  .ladder{ display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; margin:14px auto 4px; }
+  .ladder .chip-u{ background:var(--card); border:3px solid var(--ink); border-radius:14px; padding:10px 16px; font-size:24px; font-weight:900; }
+  .ladder .arrow{ font-size:22px; font-weight:900; color:var(--zh); }
+  .method-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin:14px auto 4px; }
+  .method-card{ background:var(--card); border:3px solid var(--ink); border-radius:16px; padding:12px 14px; text-align:center; }
+  .method-card .m-icon{ font-size:34px; }
+  .method-card .m-name{ font-size:22px; font-weight:900; color:var(--zh); margin:4px 0 2px; }
+  .method-card .m-form{ font-size:20px; font-weight:800; color:var(--en); }
+  .tree{ margin:14px auto 4px; text-align:center; }
+  .tree .t-root{ display:inline-block; background:var(--lemon-soft); border:3px solid var(--lemon); border-radius:16px; padding:8px 22px; font-size:26px; font-weight:900; }
+  .tree .t-arrow{ font-size:20px; font-weight:900; color:var(--zh); margin:4px auto; }
+  .tree .t-row{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:6px; }
+  .tree .t-node{ background:var(--card); border:3px solid var(--en); border-radius:12px; padding:6px 14px; font-size:21px; font-weight:900; }
+  .tree .t-tip{ font-size:17px; font-weight:700; color:var(--ink); margin-top:8px; }
+  .signpost{ margin:14px auto 4px; max-width:420px; }
+  .signpost svg{ width:100%; height:auto; display:block; }
+  .level-card .icon{
+    display:flex; align-items:center; justify-content:center;
+    width:96px; height:96px; margin:4px auto 6px; font-size:48px;
+    background:var(--card); border:4px solid var(--lv); border-radius:26px;
+    box-shadow:0 5px 0 var(--lv-shadow);
+    transition:transform .15s;
+  }
+  .level-card .lv-zh{ font-size:30px; font-weight:900; color:var(--zh); margin-top:6px; }
+  .level-card .lv-en{ font-size:18px; font-weight:700; color:var(--en); letter-spacing:.5px; }
+  .level-card .lv-desc{ font-size:18px; color:var(--ink); margin-top:8px; }
+  .level-card .stars{ font-size:30px; margin-top:10px; letter-spacing:4px; }
+  .level-card.locked{ background:#f0f0f0; border-color:#aaaaaa; box-shadow:0 5px 0 #dddddd; cursor:not-allowed; animation:none; }
+  .level-card.locked .icon{ background:#e6e6e6; border-color:#aaaaaa; filter:grayscale(1); }
+  .level-card.locked .lv-zh,.level-card.locked .lv-desc{ color:#888888; }
+  .level-card .new-tag{ display:inline-block; background:var(--zh); color:#fff; font-size:14px; font-weight:800; border-radius:999px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+
+  /* ---------- 关卡页 ---------- */
+  .bar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .bar h2{ font-size:36px; font-weight:900; color:var(--title); margin:0; }
+  .chip{ display:inline-block; font-size:16px; font-weight:800; padding:4px 14px; border:none; border-radius:999px; vertical-align:middle; color:#fff; letter-spacing:.5px; }
+  .chip.en{ background:var(--en); }
+  .chip.zh{ background:var(--zh); }
+
+  .tip-wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; margin:14px 0 22px; }
+  .script-card{
+    background:var(--card); border:3px solid var(--ink); border-left:14px solid var(--zh);
+    border-radius:16px; padding:16px 20px; width:100%; box-shadow:0 5px 0 #ffd2e0;
+  }
+  .script-card .tag{ font-weight:900; font-size:18px; margin-bottom:6px; }
+  .script-card p{ margin:0; font-size:22px; text-align:center; }
+  .pop{ animation:pop .2s ease-out; }
+
+  .hint{ font-size:20px; font-weight:700; margin:6px 0 14px; text-align:center; }
+
+  /* ---------- 规则卡与算式 ---------- */
+  .rule-card{
+    background:#fffdf3; border:3px solid var(--ink); border-radius:22px;
+    padding:20px 22px; box-shadow:0 5px 0 var(--card-shadow); margin-bottom:18px;
+  }
+  .rule-tag{ display:inline-block; background:var(--en); color:#fff; font-size:16px; font-weight:800; padding:4px 14px; border-radius:999px; letter-spacing:.5px; }
+  .rule-text{ font-size:25px; font-weight:800; color:var(--ink); margin:12px 0 8px; line-height:1.55; text-align:center; text-wrap:pretty; }
+  .expr{
+    font-size:50px; font-weight:900; text-align:center; color:var(--title);
+    letter-spacing:2px; font-variant-numeric:tabular-nums; padding:14px 8px; margin:12px 0 4px;
+  }
+  .expr .n{ color:var(--title); }
+  .op-add{ color:var(--en); }
+  .op-sub{ color:var(--purple); }
+  .op-mul{ color:var(--orange); }
+  .op-div{ color:var(--green); }
+  .paren{ color:var(--zh); font-weight:900; }
+  .steps{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .step{
+    display:flex; align-items:center; gap:12px; background:var(--card);
+    border:3px dashed var(--en); border-radius:16px; padding:12px 16px;
+    font-size:24px; font-weight:800; color:var(--ink); box-shadow:0 4px 0 var(--btn-shadow-blue);
+    animation:cardIn .3s both;
+  }
+  .step-tag{ background:var(--zh); color:#fff; font-size:15px; font-weight:800; padding:3px 10px; border-radius:999px; white-space:nowrap; }
+
+  /* ---------- 测验 ---------- */
+  .quiz-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .quiz-head .stat{ font-size:22px; font-weight:800; }
+  .timer{ font-variant-numeric:tabular-nums; }
+  .timer.danger{ color:var(--bad); animation:blinkRed .55s steps(2) infinite; }
+  .opts{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:18px auto 0; max-width:780px; }
+  .opt{
+    background:var(--card); color:var(--ink); border:3px solid var(--ink); border-radius:18px;
+    padding:16px 12px; font-size:30px; font-weight:800; cursor:pointer; box-shadow:0 5px 0 var(--btn-shadow);
+    display:flex; align-items:center; justify-content:center; min-height:86px; user-select:none;
+    flex:1 1 150px; max-width:250px; transition:transform .12s, box-shadow .12s;
+    font-variant-numeric:tabular-nums;
+  }
+  .opt:hover:not(.ok):not(.bad){ transform:translateY(-2px); box-shadow:0 7px 0 var(--btn-shadow); }
+  .opt:active{ transform:translateY(4px); box-shadow:0 1px 0 var(--btn-shadow); }
+  .opt.ok{ background:#e7f6ec; border-color:var(--ok); }
+  .opt.bad{ background:#fdecea; border-color:var(--bad); }
+  .opt.fml{ font-size:26px; }
+  .q-text{ font-size:28px; font-weight:900; color:var(--title); margin:8px 0 4px; text-align:center; }
+  .q-expr{ font-size:46px; font-weight:900; text-align:center; color:var(--title); letter-spacing:2px; font-variant-numeric:tabular-nums; margin:6px 0 2px; }
+  .q-sub{ font-size:20px; font-weight:700; color:var(--ink); text-align:center; margin:2px 0 8px; }
+  .story-card{
+    background:var(--lemon-soft); border:3px solid var(--lemon); border-radius:20px;
+    padding:16px 20px; font-size:25px; font-weight:800; line-height:1.65;
+    color:var(--title); box-shadow:0 5px 0 #f1df9e; text-align:center;
+  }
+  .story-card .scene{ font-size:30px; margin-right:4px; }
+  .hint-row{ text-align:center; margin-top:12px; }
+
+  .fb{ font-size:24px; font-weight:800; margin-top:14px; padding:14px 18px; border-radius:16px; border:3px solid transparent; text-align:center; }
+  .fb.ok{ background:#e7f6ec; border-color:var(--ok); color:var(--ok); }
+  .fb.bad{ background:#fdecea; border-color:var(--bad); color:var(--bad); }
+  .fb.plain{ background:#f6f3ea; border-color:#cfc8b8; color:var(--ink); }
+
+  /* ---------- 结果页 ---------- */
+  .result{ text-align:center; padding-top:24px; position:relative; }
+  .result .big-score{ font-size:88px; font-weight:900; color:var(--title); line-height:1.1; }
+  @supports ((-webkit-background-clip:text) or (background-clip:text)){
+    .result .big-score{
+      background:linear-gradient(90deg,var(--en),var(--purple),var(--zh),var(--orange));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+  }
+  .result .big-stars{ font-size:64px; letter-spacing:8px; margin:10px 0; }
+  .result .msg{ font-size:28px; font-weight:800; margin:12px 0 26px; }
+  #confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  #confetti span{ position:absolute; top:-40px; animation:confFall linear both; }
+  .footer-actions{ text-align:center; margin-top:26px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  #toast{
+    position:fixed; left:50%; bottom:40px; transform:translateX(-50%);
+    background:var(--card); color:var(--ink); border:3px solid var(--zh); border-radius:16px;
+    padding:14px 26px; font-size:22px; font-weight:800; box-shadow:0 5px 0 var(--btn-shadow);
+    display:none; z-index:99; max-width:92vw;
+  }
+  #muteBtn{ position:fixed; top:14px; right:14px; z-index:99; }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none!important; transition:none!important; }
+  }
+  @media (max-width:640px){
+    .home-title{ font-size:40px; }
+    .btn{ font-size:22px; padding:16px 20px; }
+    .q-text{ font-size:24px; }
+    .q-expr{ font-size:34px; }
+    .expr{ font-size:36px; }
+    .story-card{ font-size:22px; }
+    .d-abacus,.d-plus,.d-eq,.d-ruler,.d-tree,.d-balloon,.d-star,.d-pencil,.d-hill{ display:none; }
+    .d-sun{ font-size:56px; top:10px; }
+    .d-cloud{ font-size:56px; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-deco" aria-hidden="true">
+  <span class="d-sun">☀️</span>
+  <span class="d-cloud c1">☁️</span>
+  <span class="d-cloud c2">☁️</span>
+  <span class="d-cloud c3">☁️</span>
+  <span class="d-abacus">📏</span>
+  <span class="d-plus">🧭</span>
+  <span class="d-eq">⛰️</span>
+  <span class="d-ruler">📐</span>
+  <span class="d-tree">🌳</span>
+  <span class="d-balloon b1">🎈</span>
+  <span class="d-balloon b2">🎈</span>
+  <span class="d-star s1">⭐</span>
+  <span class="d-star s2">✨</span>
+  <span class="d-star s3">🌟</span>
+  <span class="d-pencil">✏️</span>
+  <span class="d-hill h1"></span>
+  <span class="d-hill h2"></span>
+</div>
+<button id="muteBtn" class="btn small" onclick="toggleMute()">🔊</button>
+<div id="toast"></div>
+
+<!-- ================= 首页：关卡地图 ================= -->
+<div id="view-home" class="wrap">
+  <h1 class="home-title"><span class="t-emoji">📏</span> 小小测量师大冒险 <span class="t-emoji e2">🧭</span></h1>
+  <svg class="home-under" viewBox="0 0 340 14" aria-hidden="true">
+    <defs>
+      <linearGradient id="underGrad" x1="0" x2="1">
+        <stop offset="0" stop-color="#4f9dff"/><stop offset=".5" stop-color="#ff8fb2"/><stop offset="1" stop-color="#ffd54f"/>
+      </linearGradient>
+    </defs>
+    <path d="M6 9 C 40 2, 70 12, 105 8 S 175 3, 215 9 S 290 3, 334 7" fill="none" stroke="url(#underGrad)" stroke-width="6" stroke-linecap="round"/>
+  </svg>
+  <p class="home-sub">Little Measurer · 三年级上册 第三单元《毫米、分米和千米》</p>
+  <p class="home-tip"><span class="chip en">Teaching Tips</span> <span class="chip zh">教学提示</span></p>
+  <div class="tip-wrap" style="margin-top:0">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p>宝贝，第三单元《毫米、分米和千米》是长度单位的冒险之旅！你会认识毫米、分米、千米三个新朋友，学会 1 厘米 = 10 毫米、1 分米 = 10 厘米、1 米 = 10 分米、1 千米 = 1000 米，还会用步测、速度、站点的方法估一估距离。从毫米村出发，一路闯到长度家族树，摘到测量师徽章吧！</p>
+    </div>
+  </div>
+  <div id="map" class="map"></div>
+  <div id="badgeBanner" class="badge-banner" style="display:none"></div>
+  <div class="home-foot">
+    <button class="btn small" onclick="resetAll()">🗑 重置闯关进度</button>
+  </div>
+</div>
+
+<!-- ================= 关卡页（1/2/3/4 共用容器） ================= -->
+<div id="view-level" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="goHome()">← 返回地图</button>
+    <h2 id="lvTitle"></h2>
+    <span id="lvChipEn" class="chip en"></span>
+    <span id="lvChipZh" class="chip zh"></span>
+  </div>
+  <div class="tip-wrap">
+    <button class="btn small tip-toggle" type="button" onclick="toggleTip(this)" aria-expanded="false">💡 教学提示 ▾</button>
+    <div class="script-card" style="display:none">
+      <div class="tag"><span class="zh">教学提示</span> · <span class="en">Teaching Tips</span></div>
+      <p id="lvScript"></p>
+    </div>
+  </div>
+  <div id="levelBody"></div>
+</div>
+
+<!-- ================= 挑战页 ================= -->
+<div id="view-quiz" class="wrap" style="display:none">
+  <div class="bar">
+    <button class="btn small" onclick="quitQuiz()">← 返回地图</button>
+    <h2 id="qzTitle">挑战</h2>
+    <span id="qzChipEn" class="chip en"></span>
+    <span id="qzChipZh" class="chip zh"></span>
+  </div>
+  <div class="quiz-head">
+    <div class="stat" id="quizProg"></div>
+    <div class="stat">当前得分：<span id="quizScore">0</span> 分</div>
+    <div class="stat">⏱ 剩余：<span id="quizTimer" class="timer">60</span> 秒</div>
+  </div>
+  <div class="card" id="quizBody"></div>
+  <div id="quizFb"></div>
+  <div class="footer-actions">
+    <button id="quizNext" class="btn primary" style="display:none" onclick="nextQ()">下一题 →</button>
+  </div>
+</div>
+
+<!-- ================= 结果页 ================= -->
+<div id="view-result" class="wrap" style="display:none">
+  <div class="result card">
+    <div id="confetti" aria-hidden="true"></div>
+    <h2 style="font-size:38px;color:var(--title);margin:0">挑战结束！</h2>
+    <div class="big-stars" id="rStars"></div>
+    <div class="big-score"><span id="rScore">0</span> 分</div>
+    <div class="msg" id="rMsg"></div>
+    <div class="footer-actions" style="margin-top:6px">
+      <button class="btn primary" id="rRetry" onclick="retryChallenge()">🔁 再挑战一次</button>
+      <button class="btn" onclick="goHome()">🏠 回到地图</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   数据区（全部内嵌，离线可用）
+===================================================== */
+var LEVELS = [
+  { id:1, icon:'🏘️', zh:'毫米村', en:'Millimetre Village', desc:'比厘米更小的单位' },
+  { id:2, icon:'🏠', zh:'分米镇', en:'Decimetre Town', desc:'厘米和米的桥梁' },
+  { id:3, icon:'⛰️', zh:'千米高原', en:'Kilometre Plateau', desc:'长距离的大单位' },
+  { id:4, icon:'🧭', zh:'估测山谷', en:'Estimation Valley', desc:'步测 · 速度 · 站点' },
+  { id:5, icon:'🌳', zh:'长度家族树', en:'Length Family Tree', desc:'整理和复习' }
+];
+
+var SCRIPTS = {
+  1:'宝贝，毫米是比厘米更小的长度单位。直尺上 1 厘米里有 10 个小格，每个小格就是 1 毫米，所以 1 厘米 = 10 毫米。硬币、身份证、纸都很薄，用毫米来量最合适。先看规则演示，再做小练习！',
+  2:'分米是厘米和米之间的桥梁：1 分米 = 10 厘米，1 米 = 10 分米。课桌宽、粉笔盒边长，这些"不长不短"的物体用分米量刚刚好。记住口诀：厘米、分米、米，进率都是 10！',
+  3:'千米是量长距离的大单位，1 千米 = 1000 米，千米也叫"公里"。城市之间的距离、高铁行驶的路程都用千米。换算的时候想一想：进率 1000，0 要添 3 个！',
+  4:'估测距离要找"标准"：可以数步数乘步长（步测法）、用速度乘时间（速度法）、数公交站数乘每站距离（站点法）。先看看三种方法，再当小小测量师！',
+  5:'长度单位是一家人：千米最大，接下来是米、分米、厘米、毫米。相邻的两个单位，除了千米到米是 1000，其他都是 10。最后一关把知识都串起来，冲高分！'
+};
+
+var DEMOS = {
+  1:{ rule:'毫米是比厘米更小的长度单位：1 厘米 = 10 毫米。',
+      html:'<div class="ruler-box"><svg viewBox="0 0 640 170" role="img" aria-label="1厘米里有10个毫米小格">'
+         +  '<rect x="20" y="90" width="600" height="52" rx="6" fill="#fff" stroke="#333" stroke-width="4"/>'
+         +  '<g stroke="#333" stroke-width="2">'
+         +    '<line x1="200" y1="90" x2="200" y2="124"/>'
+         +    '<line x1="240" y1="90" x2="240" y2="124"/>'
+         +    '<line x1="280" y1="90" x2="280" y2="124"/>'
+         +    '<line x1="320" y1="90" x2="320" y2="124"/>'
+         +    '<line x1="360" y1="90" x2="360" y2="124"/>'
+         +  '</g>'
+         +  '<g stroke="#2c3e9b" stroke-width="3">'
+         +    '<line x1="160" y1="90" x2="160" y2="136"/>'
+         +    '<line x1="200" y1="90" x2="200" y2="136"/>'
+         +    '<line x1="240" y1="90" x2="240" y2="136"/>'
+         +    '<line x1="280" y1="90" x2="280" y2="136"/>'
+         +    '<line x1="320" y1="90" x2="320" y2="136"/>'
+         +    '<line x1="360" y1="90" x2="360" y2="136"/>'
+         +    '<line x1="400" y1="90" x2="400" y2="136"/>'
+         +  '</g>'
+         +  '<g fill="#333" font-size="22" font-weight="700" text-anchor="middle">'
+         +    '<text x="160" y="158">0</text><text x="200" y="158">1</text>'
+         +    '<text x="240" y="158">2</text><text x="280" y="158">3</text>'
+         +    '<text x="320" y="158">4</text><text x="360" y="158">5</text>'
+         +  '</g>'
+         +  '<rect x="160" y="34" width="200" height="36" fill="#ffd54f" stroke="#c44569" stroke-width="4"/>'
+         +  '<text x="260" y="59" text-anchor="middle" font-size="20" font-weight="900" fill="#c44569">1 厘米里有 10 小格</text>'
+         +  '<text x="260" y="28" text-anchor="middle" font-size="22" font-weight="900" fill="#333">每 1 小格 = 1 毫米</text>'
+         +'</svg></div>'
+         + '<p class="rule-text">想一想：一枚 1 元硬币的厚度大约就是 1 毫米。</p>' },
+  2:{ rule:'分米是厘米和米的桥梁：1 分米 = 10 厘米，1 米 = 10 分米。',
+      html:'<div class="ladder">'
+         +  '<span class="chip-u">米 m</span><span class="arrow">×10 →</span>'
+         +  '<span class="chip-u">分米 dm</span><span class="arrow">×10 →</span>'
+         +  '<span class="chip-u">厘米 cm</span><span class="arrow">×10 →</span>'
+         +  '<span class="chip-u">毫米 mm</span>'
+         +'</div>'
+         + '<p class="rule-text">米、分米、厘米、毫米，相邻两个单位进率都是 10。</p>' },
+  3:{ rule:'千米是量长距离的大单位：1 千米 = 1000 米，千米也叫“公里”。',
+      html:'<div class="signpost"><svg viewBox="0 0 420 150" role="img" aria-label="路标：1千米等于1000米">'
+         +  '<rect x="130" y="30" width="160" height="80" rx="18" fill="#4f9dff" stroke="#333" stroke-width="4"/>'
+         +  '<text x="210" y="62" text-anchor="middle" font-size="24" font-weight="900" fill="#fff">1 千米</text>'
+         +  '<text x="210" y="94" text-anchor="middle" font-size="24" font-weight="900" fill="#fff">= 1000 米</text>'
+         +  '<rect x="205" y="110" width="10" height="28" fill="#666"/>'
+         +  '<text x="210" y="142" text-anchor="middle" font-size="20" font-weight="800" fill="#333">千米 km · 也叫公里</text>'
+         +'</svg></div>'
+         + '<p class="rule-text">城市之间、高铁行驶的路程，都用千米来量。</p>' },
+  4:{ rule:'估测距离先找“标准”，有三种好方法：',
+      html:'<div class="method-grid">'
+         +  '<div class="method-card"><div class="m-icon">🚶</div><div class="m-name">步测法</div><div class="m-form">步数 × 步长</div></div>'
+         +  '<div class="method-card"><div class="m-icon">⏱️</div><div class="m-name">速度法</div><div class="m-form">速度 × 时间</div></div>'
+         +  '<div class="method-card"><div class="m-icon">🚌</div><div class="m-name">站点法</div><div class="m-form">站数 × 每站距离</div></div>'
+         +'</div>'
+         + '<p class="rule-text">近的路用步测，远的路用速度，坐车就用站点。</p>' },
+  5:{ rule:'长度单位是一家人，还记得它们的大小顺序和进率吗？',
+      html:'<div class="tree">'
+         +  '<div class="t-root">🌳 千米 km</div>'
+         +  '<div class="t-arrow">×1000 ▼</div>'
+         +  '<div class="t-row"><div class="t-node">米 m</div></div>'
+         +  '<div class="t-arrow">×10 ▼</div>'
+         +  '<div class="t-row"><div class="t-node">分米 dm</div></div>'
+         +  '<div class="t-arrow">×10 ▼</div>'
+         +  '<div class="t-row"><div class="t-node">厘米 cm</div></div>'
+         +  '<div class="t-arrow">×10 ▼</div>'
+         +  '<div class="t-row"><div class="t-node">毫米 mm</div></div>'
+         +  '<div class="t-tip">千米→米进率 1000，其他相邻单位进率都是 10。</div>'
+         +'</div>' }
+};
+
+/* ---- 情境选单位（unit） ---- */
+var UNIT_Q = [
+  { tag:'l1', scene:'🪙', text:'一枚 1 元硬币的厚度约 2〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:0, ex:'硬币很薄，厚度还不到 2 毫米，用毫米最合适。', hint:'想一想：硬币有多薄？' },
+  { tag:'l1', scene:'💳', text:'一张银行卡的厚度约 1〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:0, ex:'银行卡很薄，大约就是 1 毫米厚。', hint:'薄的物体用毫米。' },
+  { tag:'l1', scene:'📖', text:'一本数学书的厚度约 6〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:0, ex:'数学书不厚，大约 6 毫米。', hint:'想一想书有多厚。' },
+  { tag:'l1', scene:'📎', text:'一枚回形针的长度约 3〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:1, ex:'回形针大约 3 厘米长。', hint:'不长不短，用厘米。' },
+  { tag:'l1', scene:'✏️', text:'一支铅笔的长度约 18〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:1, ex:'铅笔大约 18 厘米长。', hint:'一支新铅笔不到 20 厘米。' },
+  { tag:'l1', scene:'🍬', text:'一块橡皮的宽度约 2〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:1, ex:'橡皮大约 2 厘米宽。', hint:'橡皮比硬币大一点。' },
+  { tag:'l1', scene:'📏', text:'一把学生尺的长度约 20〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:1, ex:'学生尺就是 20 厘米长。', hint:'尺子上写的是厘米。' },
+  { tag:'l2', scene:'🪑', text:'一张课桌的高度约 7〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:2, ex:'课桌高约 70 厘米，也就是 7 分米。', hint:'想想课桌到你的腰哪里。' },
+  { tag:'l2', scene:'🧊', text:'一个粉笔盒的边长约 1〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:2, ex:'粉笔盒的边长正好约 1 分米。', hint:'和手掌差不多宽。' },
+  { tag:'l2', scene:'🪟', text:'教室窗户的高度约 15〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:2, ex:'窗户高约 1.5 米，也就是 15 分米。', hint:'比课桌高很多。' },
+  { tag:'l2', scene:'✏️', text:'一个铅笔盒的长度约 2〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:2, ex:'铅笔盒约 20 厘米，也就是 2 分米。', hint:'和尺子差不多长。' },
+  { tag:'l2', scene:'🚪', text:'教室门的高度约 2〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:3, ex:'门高约 2 米，大人进门都不用弯腰。', hint:'想一想门有多高。' },
+  { tag:'l2', scene:'🛏️', text:'一张床的长度约 2〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:3, ex:'床长约 2 米，躺着刚好。', hint:'睡觉要伸直腿。' },
+  { tag:'l2', scene:'🍽️', text:'一个盘子的直径约 3〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'分米',s:'dm'},{t:'米',s:'m'}], a:2, ex:'盘子直径约 30 厘米，也就是 3 分米。', hint:'比手掌大一些。' },
+  { tag:'l3', scene:'🚗', text:'爸爸开车从北京到天津，路程约 120〔　〕', opts:[{t:'米',s:'m'},{t:'千米',s:'km'}], a:1, ex:'两个城市之间很远，用千米。', hint:'城市之间用大单位。' },
+  { tag:'l3', scene:'🏫', text:'从学校到少年宫约 3〔　〕', opts:[{t:'米',s:'m'},{t:'千米',s:'km'}], a:1, ex:'要走一会儿才到，约 3 千米。', hint:'走路能到，但要走挺久。' },
+  { tag:'l3', scene:'🚄', text:'高铁每小时大约行驶 300〔　〕', opts:[{t:'米',s:'m'},{t:'千米',s:'km'}], a:1, ex:'高铁飞快，每小时约 300 千米。', hint:'比汽车快得多。' },
+  { tag:'l3', scene:'🎽', text:'马拉松全程约 42〔　〕', opts:[{t:'米',s:'m'},{t:'千米',s:'km'}], a:1, ex:'马拉松约 42 千米，跑完要很久。', hint:'全程很长，用大单位。' },
+  { tag:'l3', scene:'🌉', text:'长江大桥的长度约 6300〔　〕', opts:[{t:'米',s:'m'},{t:'千米',s:'km'}], a:0, ex:'桥约 6 千米多，用米是 6300 米。', hint:'桥很长，但用米数更准确。' },
+  { tag:'l3', scene:'🏃', text:'操场跑道一圈约 400〔　〕', opts:[{t:'米',s:'m'},{t:'千米',s:'km'}], a:0, ex:'跑道一圈 400 米，2 圈半才 1 千米。', hint:'和千米比还差得远。' },
+  { tag:'l3', scene:'🏢', text:'教学楼大约高 20〔　〕', opts:[{t:'米',s:'m'},{t:'千米',s:'km'}], a:0, ex:'教学楼约 6 层，高约 20 米。', hint:'比树高，但没有城市之间远。' },
+  { tag:'l5', scene:'🎽', text:'一根跳绳的长度约 2〔　〕', opts:[{t:'毫米',s:'mm'},{t:'厘米',s:'cm'},{t:'米',s:'m'},{t:'千米',s:'km'}], a:2, ex:'跳绳要甩得开，约 2 米长。', hint:'长度单位排排队想一想。' }
+];
+
+/* ---- 直尺读数（ruler） ---- */
+var RULER_Q = [
+  { mm:8,  ans:'8 毫米',       opts:['8 毫米','8 厘米','80 毫米','5 毫米'], ex:'从 0 数到第 8 个小格，就是 8 毫米。', hint:'1 小格是 1 毫米。' },
+  { mm:15, ans:'1 厘米 5 毫米', opts:['1 厘米 5 毫米','15 厘米','1 厘米 2 毫米','5 厘米 1 毫米'], ex:'1 厘米 = 10 毫米，15 毫米就是 1 厘米 5 毫米。', hint:'先数整厘米，再数小格。' },
+  { mm:26, ans:'2 厘米 6 毫米', opts:['2 厘米 6 毫米','26 厘米','2 厘米 4 毫米','6 厘米 2 毫米'], ex:'到 2 厘米再多 6 小格，就是 2 厘米 6 毫米。', hint:'整厘米 2，小格 6。' },
+  { mm:34, ans:'3 厘米 4 毫米', opts:['3 厘米 4 毫米','34 厘米','4 厘米 3 毫米','3 厘米 8 毫米'], ex:'到 3 厘米再多 4 小格，就是 3 厘米 4 毫米。', hint:'整厘米 3，小格 4。' },
+  { mm:50, ans:'5 厘米',       opts:['5 厘米','4 厘米','6 厘米','5 毫米'], ex:'铅笔正好到 5 厘米的刻度，就是 5 厘米。', hint:'看红色虚线的位置。' },
+  { mm:67, ans:'6 厘米 7 毫米', opts:['6 厘米 7 毫米','67 厘米','6 厘米 3 毫米','7 厘米 6 毫米'], ex:'到 6 厘米再多 7 小格，就是 6 厘米 7 毫米。', hint:'整厘米 6，小格 7。' },
+  { mm:80, ans:'8 厘米',       opts:['8 厘米','7 厘米','9 厘米','8 毫米'], ex:'正好到 8 厘米的刻度，就是 8 厘米。', hint:'看红色虚线的位置。' },
+  { mm:123,ans:'12 厘米 3 毫米',opts:['12 厘米 3 毫米','12 厘米 8 毫米','13 厘米 2 毫米','12 厘米 30 毫米'], ex:'到 12 厘米再多 3 小格，就是 12 厘米 3 毫米。', hint:'整厘米 12，小格 3。' },
+  { mm:145,ans:'14 厘米 5 毫米',opts:['14 厘米 5 毫米','14 厘米 2 毫米','15 厘米 4 毫米','145 厘米'], ex:'到 14 厘米再多 5 小格，就是 14 厘米 5 毫米。', hint:'整厘米 14，小格 5。' }
+];
+
+/* ---- 进率换算（conv） ---- */
+var CONV_Q = [
+  { tag:'l1', text:'3 厘米 =（　）毫米', ans:30, opts:[30,3,300,13], ex:'1 厘米 = 10 毫米，3 厘米是 3 个 10，就是 30 毫米。' },
+  { tag:'l1', text:'40 毫米 =（　）厘米', ans:4, opts:[4,40,400,14], ex:'40 毫米里有 4 个 10 毫米，就是 4 厘米。' },
+  { tag:'l1', text:'7 厘米 =（　）毫米', ans:70, opts:[70,7,700,17], ex:'1 厘米 = 10 毫米，7 厘米就是 70 毫米。' },
+  { tag:'l1', text:'90 毫米 =（　）厘米', ans:9, opts:[9,90,19,900], ex:'90 毫米里有 9 个 10 毫米，就是 9 厘米。' },
+  { tag:'l1', text:'5 厘米 =（　）毫米', ans:50, opts:[50,5,15,500], ex:'5 厘米就是 5 个 10 毫米，等于 50 毫米。' },
+  { tag:'l1', text:'60 毫米 =（　）厘米', ans:6, opts:[6,60,16,600], ex:'60 毫米里有 6 个 10 毫米，就是 6 厘米。' },
+  { tag:'l2', text:'1 分米 =（　）厘米', ans:10, opts:[10,1,100,11], ex:'1 分米 = 10 厘米，记住这个进率！' },
+  { tag:'l2', text:'5 分米 =（　）厘米', ans:50, opts:[50,5,15,500], ex:'1 分米 = 10 厘米，5 分米就是 50 厘米。' },
+  { tag:'l2', text:'80 厘米 =（　）分米', ans:8, opts:[8,80,18,800], ex:'80 厘米里有 8 个 10 厘米，就是 8 分米。' },
+  { tag:'l2', text:'3 米 =（　）分米', ans:30, opts:[30,3,13,300], ex:'1 米 = 10 分米，3 米就是 30 分米。' },
+  { tag:'l2', text:'60 分米 =（　）米', ans:6, opts:[6,60,16,600], ex:'60 分米里有 6 个 10 分米，就是 6 米。' },
+  { tag:'l2', text:'2 米 5 分米 =（　）分米', ans:25, opts:[25,7,250,52], ex:'2 米 = 20 分米，20 + 5 = 25 分米。' },
+  { tag:'l2', text:'5 分米 3 厘米 =（　）厘米', ans:53, opts:[53,8,530,35], ex:'5 分米 = 50 厘米，50 + 3 = 53 厘米。' },
+  { tag:'l3', text:'1 千米 =（　）米', ans:1000, opts:[1000,100,10,10000], ex:'1 千米 = 1000 米，千米是 1000 进率！' },
+  { tag:'l3', text:'3 千米 =（　）米', ans:3000, opts:[3000,300,30,3300], ex:'1 千米 = 1000 米，3 千米就是 3000 米。' },
+  { tag:'l3', text:'5000 米 =（　）千米', ans:5, opts:[5,50,500,5000], ex:'5000 米里有 5 个 1000 米，就是 5 千米。' },
+  { tag:'l3', text:'7 千米 =（　）米', ans:7000, opts:[7000,700,70,7700], ex:'7 千米就是 7 个 1000 米，等于 7000 米。' },
+  { tag:'l3', text:'9000 米 =（　）千米', ans:9, opts:[9,90,900,19], ex:'9000 米里有 9 个 1000 米，就是 9 千米。' },
+  { tag:'l3', text:'6 千米 300 米 =（　）米', ans:6300, opts:[6300,6030,900,3600], ex:'6 千米 = 6000 米，再加上 300 米，就是 6300 米。' },
+  { tag:'l5', text:'1 米 =（　）厘米', ans:100, opts:[100,10,1000,110], ex:'1 米 = 100 厘米，二年级学过的进率。' },
+  { tag:'l5', text:'4 米 =（　）分米', ans:40, opts:[40,4,400,14], ex:'1 米 = 10 分米，4 米就是 40 分米。' },
+  { tag:'l5', text:'200 厘米 =（　）米', ans:2, opts:[2,20,2000,12], ex:'200 厘米里有 2 个 100 厘米，就是 2 米。' },
+  { tag:'l5', text:'8 千米 =（　）米', ans:8000, opts:[8000,800,80,8800], ex:'8 千米就是 8 个 1000 米，等于 8000 米。' },
+  { tag:'l5', text:'20 毫米 =（　）厘米', ans:2, opts:[2,20,200,12], ex:'20 毫米里有 2 个 10 毫米，就是 2 厘米。' },
+  { tag:'l5', text:'1 米 20 厘米 =（　）厘米', ans:120, opts:[120,102,1000,20], ex:'1 米 = 100 厘米，100 + 20 = 120 厘米。' }
+];
+
+/* ---- 比大小（cmp） ---- */
+var CMP_Q = [
+  { tag:'l2', a:'3 分米', b:'30 厘米', ans:'=', ex:'1 分米 = 10 厘米，3 分米 = 30 厘米。' },
+  { tag:'l2', a:'5 米', b:'60 分米', ans:'＜', ex:'5 米 = 50 分米，50 分米 ＜ 60 分米。' },
+  { tag:'l2', a:'80 厘米', b:'7 分米', ans:'＞', ex:'80 厘米 = 8 分米，8 分米 ＞ 7 分米。' },
+  { tag:'l2', a:'4 分米', b:'40 厘米', ans:'=', ex:'4 分米 = 40 厘米。' },
+  { tag:'l2', a:'2 米', b:'19 分米', ans:'＞', ex:'2 米 = 20 分米，20 分米 ＞ 19 分米。' },
+  { tag:'l2', a:'9 分米', b:'1 米', ans:'＜', ex:'1 米 = 10 分米，9 分米 ＜ 10 分米。' },
+  { tag:'l5', a:'1 千米', b:'1000 米', ans:'=', ex:'1 千米 = 1000 米。' },
+  { tag:'l5', a:'1 米', b:'100 厘米', ans:'=', ex:'1 米 = 100 厘米。' },
+  { tag:'l5', a:'3 米', b:'30 分米', ans:'=', ex:'3 米 = 30 分米。' },
+  { tag:'l5', a:'700 厘米', b:'7 米', ans:'=', ex:'700 厘米 = 7 米。' }
+];
+
+/* ---- 量感判断（judge） ---- */
+var JUDGE_Q = [
+  { tag:'l3', q:'珠穆朗玛峰大约高 8848 千米。', a:false, ex:'珠峰高约 8848 米，用千米就太大了。' },
+  { tag:'l3', q:'汽车每小时大约行驶 80 米。', a:false, ex:'汽车每小时约行 80 千米，80 米太短了。' },
+  { tag:'l3', q:'从家步行到学校大约 500 米。', a:true, ex:'走路几分钟能到，500 米比较合适。' },
+  { tag:'l3', q:'教室的宽度大约是 60 千米。', a:false, ex:'教室宽约 6 米，60 千米可以到另一个城市啦！' },
+  { tag:'l3', q:'操场跑道一圈约 400 米。', a:true, ex:'操场一圈 400 米，跑 2 圈半就是 1 千米。' },
+  { tag:'l3', q:'一支铅笔长约 20 千米。', a:false, ex:'铅笔长约 20 厘米，20 千米太长了。' },
+  { tag:'l5', q:'长度单位从大到小是：千米、米、分米、厘米、毫米。', a:true, ex:'千米最大，然后依次是米、分米、厘米、毫米。' },
+  { tag:'l5', q:'1 千米 = 1000 米，千米和米之间的进率是 1000。', a:true, ex:'千米到米是唯一的 1000 进率。' },
+  { tag:'l5', q:'1 厘米 = 10 毫米，所以 1 分米 = 10 毫米。', a:false, ex:'1 分米 = 10 厘米 = 100 毫米，不是 10 毫米。' }
+];
+
+/* ---- 估测与生活应用题（story） ---- */
+var STORY_Q = [
+  { tag:'l3', text:'学校到少年宫大约 3 千米，小明已经走了 1 千米 500 米，还要走多少米？', scene:'🏫',
+    ans:1500, wrongs:[2500,2000,3500], ex:'3 千米 = 3000 米，1 千米 500 米 = 1500 米，3000 − 1500 = 1500 米。' },
+  { tag:'l4', text:'小明一步大约 50 厘米，从家到学校走了 1000 步，家到学校大约多少米？', scene:'🚶',
+    ans:500, wrongs:[5000,50,50000], ex:'1000 × 50 = 50000 厘米，50000 厘米 = 500 米。' },
+  { tag:'l4', text:'小刚一步大约 40 厘米，从教室走到操场走了 100 步，大约多少米？', scene:'🏃',
+    ans:40, wrongs:[400,4,4000], ex:'100 × 40 = 4000 厘米，4000 厘米 = 40 米。' },
+  { tag:'l4', text:'爷爷一步大约 60 厘米，绕公园走了 500 步，大约走了多少米？', scene:'🌳',
+    ans:300, wrongs:[3000,30,6000], ex:'500 × 60 = 30000 厘米，30000 厘米 = 300 米。' },
+  { tag:'l4', text:'小丽 1 分钟大约走 70 米，到学校用了 8 分钟，家到学校大约多少米？', scene:'⏱️',
+    ans:560, wrongs:[78,5600,540], ex:'70 × 8 = 560 米。' },
+  { tag:'l4', text:'妈妈 1 分钟大约走 65 米，去超市用了 6 分钟，超市离家大约多少米？', scene:'🛒',
+    ans:390, wrongs:[71,3900,305], ex:'65 × 6 = 390 米。' },
+  { tag:'l4', text:'小红 1 分钟大约走 80 米，到图书馆用了 5 分钟，大约走了多少米？', scene:'📚',
+    ans:400, wrongs:[85,4000,160], ex:'80 × 5 = 400 米。' },
+  { tag:'l4', text:'坐公交车上学，一共坐 3 站，每站大约 500 米，家到学校大约多少米？', scene:'🚌',
+    ans:1500, wrongs:[15000,503,800], ex:'3 × 500 = 1500 米。' },
+  { tag:'l4', text:'坐地铁去公园，一共坐 2 站，每站大约 1000 米，一共大约多少米？', scene:'🚇',
+    ans:2000, wrongs:[20000,1002,3000], ex:'2 × 1000 = 2000 米，也就是 2 千米。' },
+  { tag:'l5', text:'妈妈买了一条 2 米长的彩带，剪下 80 厘米做蝴蝶结，还剩多少厘米？', scene:'🎀',
+    ans:120, wrongs:[20,1280,180], ex:'2 米 = 200 厘米，200 − 80 = 120 厘米。' },
+  { tag:'l5', text:'操场跑道一圈 400 米，小明跑了 2 圈半，一共跑了多少米？', scene:'🏅',
+    ans:1000, wrongs:[800,1200,1400], ex:'2 圈是 800 米，半圈 200 米，800 + 200 = 1000 米，正好 1 千米！' }
+];
+
+/* ---- 估测方法选择（method） ---- */
+var METHOD_Q = [
+  { scene:'🏫', text:'从教室到操场，距离比较近，用哪种方法估最方便？', opts:[{t:'步测法',s:'数步数'},{t:'速度法',s:'计时'},{t:'站点法',s:'数站'},{t:'随便猜',s:'不靠谱'}], a:0, ex:'近的距离数步数最方便：步数 × 步长就能估出来。', hint:'想一想哪种方法最省事。' },
+  { scene:'🛒', text:'从家走路去超市，要走十几分钟，用哪种方法估最合适？', opts:[{t:'步测法',s:'数步数'},{t:'速度法',s:'计时'},{t:'站点法',s:'数站'},{t:'随便猜',s:'不靠谱'}], a:1, ex:'走路去，知道 1 分钟走多远，用速度 × 时间最合适。', hint:'走路走很久，就用计时。' },
+  { scene:'🚌', text:'坐公交车去少年宫，用哪种方法估最合适？', opts:[{t:'步测法',s:'数步数'},{t:'速度法',s:'计时'},{t:'站点法',s:'数站'},{t:'随便猜',s:'不靠谱'}], a:2, ex:'坐车就数站数：站数 × 每站距离就是总路程。', hint:'车上有站牌哦。' }
+];
+
+/* ---- 长度单位排序（sort） ---- */
+var SORT_Q = [
+  { q:'按从短到长，把长度单位排好队：', order:['mm','cm','dm','m','km'], ex:'从小到大：毫米、厘米、分米、米、千米。', hint:'想一想：谁最短？' },
+  { q:'按从长到短，把长度单位排好队：', order:['km','m','dm','cm','mm'], ex:'从大到小：千米、米、分米、厘米、毫米。', hint:'想一想：谁最长？' }
+];
+var SORT_UNITS = [
+  { id:'km', t:'千米' }, { id:'m', t:'米' }, { id:'dm', t:'分米' }, { id:'cm', t:'厘米' }, { id:'mm', t:'毫米' }
+];
+
+/* =====================================================
+   全局状态与存档
+===================================================== */
+var SAVE_KEY = 'little-measurer-adventure-v1';
+var G = { unlocked:1, stars:{1:0,2:0,3:0,4:0,5:0}, best:{1:0,2:0,3:0,4:0,5:0}, muted:false };
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }catch(e){}
+}
+function load(){
+  try{
+    var s = localStorage.getItem(SAVE_KEY);
+    if(s){ var o = JSON.parse(s); if(o && o.stars){ G = o; } }
+  }catch(e){}
+}
+function starStr(n, total){
+  var s = '';
+  for(var i=0;i<total;i++){ s += (i < n ? '⭐' : '☆'); }
+  return s;
+}
+
+/* =====================================================
+   随机工具与数学
+===================================================== */
+function rnd(a, b){ return a + Math.floor(Math.random()*(b - a + 1)); }
+function pick(arr){ return arr[rnd(0, arr.length-1)]; }
+function shuffle(arr){
+  for(var i=arr.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+function divisors(n){
+  var out = [];
+  for(var i=2;i<=n;i++){ if(n % i === 0){ out.push(i); } }
+  return out;
+}
+function applyOp(a, b, op){
+  if(op === '+'){ return a + b; }
+  if(op === '-'){ return a - b; }
+  if(op === '×'){ return a * b; }
+  if(op === '÷'){ return (b !== 0 && a % b === 0) ? a / b : null; }
+  return null;
+}
+function optsFrom(ans, wrongs){
+  var set = [ans];
+  for(var i=0;i<wrongs.length;i++){
+    var w = wrongs[i];
+    if(typeof w === 'number' && w >= 0 && w !== ans && set.indexOf(w) < 0){ set.push(w); }
+  }
+  var guard = 0;
+  while(set.length < 4 && guard < 200){
+    guard++;
+    var d = ans + (Math.random()<0.5 ? -1 : 1) * rnd(1, 9);
+    if(d >= 0 && d !== ans && set.indexOf(d) < 0){ set.push(d); }
+  }
+  if(set.length < 4){ set.push(ans + set.length + 1); }
+  return shuffle(set);
+}
+function tryGen(fn){
+  for(var i=0;i<80;i++){
+    var it = fn();
+    if(it){ return it; }
+  }
+  return null;
+}
+function exprHTML(t){
+  var out = '', num = '';
+  for(var i=0;i<t.length;i++){
+    var ch = t.charAt(i);
+    if(ch >= '0' && ch <= '9'){ num += ch; continue; }
+    if(num){ out += '<span class="n">'+num+'</span>'; num = ''; }
+    if(ch === '+'){ out += '<span class="op-add">+</span>'; }
+    else if(ch === '-'){ out += '<span class="op-sub">−</span>'; }
+    else if(ch === '×'){ out += '<span class="op-mul">×</span>'; }
+    else if(ch === '÷'){ out += '<span class="op-div">÷</span>'; }
+    else if(ch === '(' || ch === ')'){ out += '<span class="paren">'+ch+'</span>'; }
+    else { out += ch; }
+  }
+  if(num){ out += '<span class="n">'+num+'</span>'; }
+  return out;
+}
+
+
+/* ---- 题组工具 ---- */
+function byTag(arr, tag){ return arr.filter(function(x){ return x.tag === tag; }); }
+function pickN(arr, n){
+  var c = shuffle(arr.slice());
+  return c.slice(0, n);
+}
+function toOpts(opts, ans){
+  var set = opts.slice();
+  shuffle(set);
+  return { opts:set, a:set.indexOf(ans) };
+}
+function unitItem(it){
+  return { type:'unit', scene:it.scene, text:it.text, opts:it.opts.slice(), a:it.a, ex:it.ex, hint:it.hint };
+}
+function methodItem(it){
+  return { type:'method', scene:it.scene, text:it.text, opts:it.opts.slice(), a:it.a, ex:it.ex, hint:it.hint };
+}
+function rulerItem(it){
+  return { type:'ruler', mm:it.mm, opts:it.opts.slice(), a:it.opts.indexOf(it.ans), ans:it.ans, ex:it.ex, hint:it.hint };
+}
+function convItem(it){
+  var o = toOpts(it.opts, it.ans);
+  return { type:'conv', text:it.text, opts:o.opts, a:o.a, ex:it.ex, hint:'想一想进率：大单位换小单位乘进率，小单位换大单位除以进率。' };
+}
+function cmpItem(it){
+  var o = toOpts(['=','＞','＜'], it.ans);
+  return { type:'cmp', left:it.a, right:it.b, opts:o.opts, a:o.a, ex:it.ex, hint:'先把两个都换成一样的单位再比。' };
+}
+function judgeItem(it){
+  return { type:'judge', q:it.q, a:it.a, ex:it.ex, hint:it.ex };
+}
+function storyItem(it){
+  var o = toOpts(it.wrongs.concat(it.ans), it.ans);
+  return { type:'story', text:it.text, scene:it.scene, opts:o.opts, a:o.a, ex:it.ex, hint:'先找一找题目里的数量关系，再算一算。' };
+}
+
+/* ---- 各关题组 ---- */
+function buildL1Bank(){
+  var bank = [];
+  var rulers = pickN(RULER_Q, 2);
+  for(var i=0;i<rulers.length;i++){ bank.push(rulerItem(rulers[i])); }
+  var u = pickN(byTag(UNIT_Q,'l1'), 1);
+  for(var j=0;j<u.length;j++){ bank.push(unitItem(u[j])); }
+  var c = pickN(byTag(CONV_Q,'l1'), 1);
+  for(var k=0;k<c.length;k++){ bank.push(convItem(c[k])); }
+  shuffle(bank);
+  return bank.slice(0, 4);
+}
+function buildL2Bank(){
+  var bank = [];
+  var c = pickN(byTag(CONV_Q,'l2'), 4);
+  for(var i=0;i<c.length;i++){ bank.push(convItem(c[i])); }
+  var m = pickN(byTag(CMP_Q,'l2'), 2);
+  for(var j=0;j<m.length;j++){ bank.push(cmpItem(m[j])); }
+  var u = pickN(byTag(UNIT_Q,'l2'), 2);
+  for(var k=0;k<u.length;k++){ bank.push(unitItem(u[k])); }
+  shuffle(bank);
+  return bank.slice(0, 8);
+}
+function buildL3Bank(){
+  var bank = [];
+  var c = pickN(byTag(CONV_Q,'l3'), 4);
+  for(var i=0;i<c.length;i++){ bank.push(convItem(c[i])); }
+  var u = pickN(byTag(UNIT_Q,'l3'), 2);
+  for(var j=0;j<u.length;j++){ bank.push(unitItem(u[j])); }
+  var jg = pickN(byTag(JUDGE_Q,'l3'), 1);
+  for(var k=0;k<jg.length;k++){ bank.push(judgeItem(jg[k])); }
+  var st = pickN(byTag(STORY_Q,'l3'), 1);
+  for(var m=0;m<st.length;m++){ bank.push(storyItem(st[m])); }
+  shuffle(bank);
+  return bank.slice(0, 8);
+}
+function buildL4Bank(){
+  var bank = [];
+  var st = pickN(byTag(STORY_Q,'l4'), 6);
+  for(var i=0;i<st.length;i++){ bank.push(storyItem(st[i])); }
+  var md = pickN(METHOD_Q, 2);
+  for(var j=0;j<md.length;j++){ bank.push(methodItem(md[j])); }
+  shuffle(bank);
+  return bank.slice(0, 8);
+}
+function buildL5Bank(){
+  var bank = [];
+  var sort = pick(SORT_Q);
+  bank.push({ type:'sort', q:sort.q, order:sort.order, units:SORT_UNITS.slice(), ex:sort.ex, hint:sort.hint });
+  var c = pickN(byTag(CONV_Q,'l5'), 3);
+  for(var i=0;i<c.length;i++){ bank.push(convItem(c[i])); }
+  var m = pickN(byTag(CMP_Q,'l5'), 2);
+  for(var j=0;j<m.length;j++){ bank.push(cmpItem(m[j])); }
+  var jg = pickN(byTag(JUDGE_Q,'l5'), 2);
+  for(var k=0;k<jg.length;k++){ bank.push(judgeItem(jg[k])); }
+  var u = pickN(byTag(UNIT_Q,'l5'), 1);
+  for(var x=0;x<u.length;x++){ bank.push(unitItem(u[x])); }
+  var st = pickN(byTag(STORY_Q,'l5'), 1);
+  for(var y=0;y<st.length;y++){ bank.push(storyItem(st[y])); }
+  shuffle(bank);
+  return bank.slice(0, 10);
+}
+/* =====================================================
+   音效与语音（WebAudio + Web Speech，离线）
+===================================================== */
+var AC = null;
+function tone(freq, start, dur, type){
+  var o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, AC.currentTime + start);
+  g.gain.linearRampToValueAtTime(0.25, AC.currentTime + start + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + start + dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime + start); o.stop(AC.currentTime + start + dur + 0.05);
+}
+function sfx(ok){
+  if(G.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended'){ AC.resume(); }
+    if(ok){ tone(660, 0, 0.18); tone(880, 0.16, 0.3); }
+    else  { tone(220, 0, 0.28, 'sawtooth'); }
+  }catch(e){}
+}
+function tick(){
+  if(G.muted) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended'){ AC.resume(); }
+    tone(880, 0, 0.05);
+  }catch(e){}
+}
+function speak(txt){
+  if(G.muted) return;
+  try{
+    if(!('speechSynthesis' in window)) return;
+    var u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'zh-CN'; u.rate = 0.95;
+    var vs = speechSynthesis.getVoices();
+    for(var i=0;i<vs.length;i++){
+      if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('zh')===0){ u.voice = vs[i]; break; }
+    }
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function toggleMute(){
+  G.muted = !G.muted; save();
+  document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+}
+
+/* =====================================================
+   视图切换 / 首页
+===================================================== */
+function showView(id){
+  var vs = ['view-home','view-level','view-quiz','view-result'];
+  for(var i=0;i<vs.length;i++){
+    document.getElementById(vs[i]).style.display = (vs[i]===id) ? '' : 'none';
+  }
+  window.scrollTo(0,0);
+}
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._tm); t._tm = setTimeout(function(){ t.style.display='none'; }, 2400);
+}
+function toggleTip(btn){
+  var card = btn.parentNode.querySelector('.script-card');
+  var open = card.style.display !== 'none';
+  card.style.display = open ? 'none' : '';
+  btn.textContent = open ? '💡 教学提示 ▾' : '收起提示 ▴';
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+  if(!open){ card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
+}
+function goHome(){
+  stopTimer();
+  renderHome(); showView('view-home'); curLevel = 0;
+}
+function renderHome(){
+  var html = '';
+  for(var i=0;i<LEVELS.length;i++){
+    var lv = LEVELS[i], locked = lv.id > G.unlocked;
+    html += '<div class="card level-card lv'+lv.id+(locked?' locked':'')+'" '+(locked?'':'onclick="openLevel('+lv.id+')"')+'>'
+          +   '<div class="icon">'+(locked?'🔒':lv.icon)+'</div>'
+          +   '<div class="lv-zh">第 '+lv.id+' 关 · '+lv.zh+'</div>'
+          +   '<div class="lv-en">'+lv.en+'</div>'
+          +   '<div class="lv-desc">'+(locked?'先闯过前面的关卡就能解锁':'点击开始闯关')+'</div>'
+          +   '<div class="stars">'+starStr(G.stars[lv.id], 3)+'</div>'
+          + '</div>';
+  }
+  document.getElementById('map').innerHTML = html;
+  var allStars = G.stars[1]>0 && G.stars[2]>0 && G.stars[3]>0 && G.stars[4]>0 && G.stars[5]>0;
+  var b = document.getElementById('badgeBanner');
+  if(allStars){
+    b.style.display = '';
+    b.innerHTML = '🏅 小小测量师徽章<br><small>5 个长度单位全部通关 · Little Measurer Badge</small>';
+  } else {
+    b.style.display = 'none';
+  }
+}
+function resetAll(){
+  if(confirm('确定要清空所有星星和得分，重新开始吗？')){
+    G = { unlocked:1, stars:{1:0,2:0,3:0,4:0,5:0}, best:{1:0,2:0,3:0,4:0,5:0}, muted:G.muted };
+    save(); renderHome(); showToast('进度已重置');
+  }
+}
+
+/* =====================================================
+   关卡入口与规则演示
+===================================================== */
+var curLevel = 0;
+function openLevel(id){
+  curLevel = id;
+  var lv = LEVELS[id-1];
+  document.getElementById('lvTitle').textContent = '第 '+id+' 关 · '+lv.zh;
+  document.getElementById('lvChipEn').textContent = lv.en;
+  document.getElementById('lvChipZh').textContent = lv.zh;
+  document.getElementById('lvScript').textContent = SCRIPTS[id];
+  renderLevel(id);
+  showView('view-level');
+}
+function renderLevel(id){
+  var d = DEMOS[id];
+  var html = '<div class="rule-card">'
+        +   '<div class="rule-tag">🧭 规则演示 · Rule</div>'
+        +   '<p class="rule-text">'+d.rule+'</p>'
+        +   d.html
+        + '</div>';
+  html += '<div class="footer-actions"><button class="btn primary" onclick="startChallenge(\'l'+id+'\')">🚀 开始挑战</button></div>';
+  document.getElementById('levelBody').innerHTML = html;
+}
+
+/* =====================================================
+   挑战引擎（限时计分）
+===================================================== */
+var MODE_META = {
+  l1:{ title:'毫米村小练习', en:'mm Mini Quiz', zh:'4 题热身', timed:false, level:1, retry:'再练一次', qs:4 },
+  l2:{ title:'分米镇冲关', en:'dm Quiz', zh:'60 秒冲关', timed:true, level:2, retry:'再挑战一次', qs:8 },
+  l3:{ title:'千米高原冲关', en:'km Quiz', zh:'60 秒冲关', timed:true, level:3, retry:'再挑战一次', qs:8 },
+  l4:{ title:'估测山谷冲关', en:'Estimation Quiz', zh:'60 秒冲关', timed:true, level:4, retry:'再挑战一次', qs:8 },
+  l5:{ title:'家族树综合挑战', en:'Grand Quiz', zh:'60 秒综合', timed:true, level:5, retry:'再挑战一次', qs:10 }
+};
+var Q = null;
+function startChallenge(mode){
+  stopTimer();
+  var meta = MODE_META[mode];
+  Q = { mode:mode, bank:[], i:0, score:0, answered:false, timer:null, timeLeft:60, timed:meta.timed };
+  if(mode==='l1'){ Q.bank = buildL1Bank(); }
+  if(mode==='l2'){ Q.bank = buildL2Bank(); }
+  if(mode==='l3'){ Q.bank = buildL3Bank(); }
+  if(mode==='l4'){ Q.bank = buildL4Bank(); }
+  if(mode==='l5'){ Q.bank = buildL5Bank(); }
+  document.getElementById('qzTitle').textContent = meta.title;
+  document.getElementById('qzChipEn').textContent = meta.en;
+  document.getElementById('qzChipZh').textContent = meta.zh;
+  document.getElementById('quizTimer').style.display = meta.timed ? '' : 'none';
+  showView('view-quiz');
+  if(Q.timed){ startTimer(); }
+  renderQ();
+}
+function startTimer(){
+  stopTimer();
+  Q.timeLeft = 60;
+  document.getElementById('quizTimer').textContent = 60;
+  document.getElementById('quizTimer').classList.remove('danger');
+  Q.timer = setInterval(function(){
+    Q.timeLeft--;
+    var el = document.getElementById('quizTimer');
+    el.textContent = Q.timeLeft;
+    if(Q.timeLeft <= 10){
+      el.classList.add('danger');
+      tick();
+    }
+    if(Q.timeLeft <= 0){
+      stopTimer();
+      finishQuiz();
+    }
+  }, 1000);
+}
+function stopTimer(){
+  if(Q && Q.timer){ clearInterval(Q.timer); Q.timer = null; }
+}
+function quitQuiz(){
+  if(confirm('确定要退出挑战吗？本次成绩不保存。')){
+    goHome();
+  }
+}
+function rulerSVG(mm){
+  var perCm = 40, x0 = 26, top = 100, h = 54, totalCm = 16;
+  var x = x0 + (mm/10)*perCm;
+  var s = '<div class="ruler-box"><svg viewBox="0 0 700 192" role="img" aria-label="直尺读数">';
+  s += '<rect x="'+x0+'" y="'+top+'" width="'+(totalCm*perCm)+'" height="'+h+'" rx="6" fill="#fff" stroke="#333" stroke-width="4"/>';
+  for(var c=0;c<totalCm;c++){
+    for(var m=0;m<10;m++){
+      var tx = x0 + c*perCm + m*perCm/10;
+      var hh = (m===0?26:(m===5?18:11));
+      s += '<line x1="'+tx.toFixed(1)+'" y1="'+top+'" x2="'+tx.toFixed(1)+'" y2="'+(top+hh)+'" stroke="#333" stroke-width="'+(m===0?3:1.5)+'"/>';
+    }
+  }
+  for(var c2=0;c2<=totalCm;c2++){
+    var nx = x0 + c2*perCm;
+    s += '<text x="'+nx+'" y="'+(top+h+26)+'" text-anchor="middle" font-size="20" font-weight="700" fill="#333">'+c2+'</text>';
+  }
+  s += '<rect x="'+x0+'" y="36" width="'+(x-x0).toFixed(1)+'" height="34" fill="#ffd54f" stroke="#c44569" stroke-width="4"/>';
+  s += '<line x1="'+x.toFixed(1)+'" y1="16" x2="'+x.toFixed(1)+'" y2="'+(top-4)+'" stroke="#d64550" stroke-width="4" stroke-dasharray="7 5"/>';
+  s += '<text x="'+x.toFixed(1)+'" y="12" text-anchor="middle" font-size="18" font-weight="900" fill="#d64550">?</text>';
+  s += '</svg></div>';
+  return s;
+}
+function renderSort(){
+  if(!Q){ return; }
+  var item = Q.bank[Q.i];
+  if(!Q.sortSel){ Q.sortSel = []; }
+  var slotHtml = '';
+  for(var i=0;i<item.units.length;i++){
+    var v = Q.sortSel[i];
+    slotHtml += '<div class="sort-slot'+(v?' filled':'')+'">'+(v?'<span class="no">'+(i+1)+'</span>'+v.t:'')+'</div>';
+  }
+  document.getElementById('sortSlots').innerHTML = slotHtml;
+  var chipHtml = '';
+  for(var j=0;j<item.units.length;j++){
+    var u = item.units[j];
+    var used = Q.sortSel.indexOf(u) >= 0;
+    chipHtml += '<div class="sort-chip'+(used?' used':'')+'" '+(used?'':'onclick="pickSort(\''+u.id+'\')"')+'>'+u.t+'</div>';
+  }
+  document.getElementById('sortChips').innerHTML = chipHtml;
+}
+function pickSort(id){
+  if(!Q || Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var u = null;
+  for(var k=0;k<item.units.length;k++){ if(item.units[k].id === id){ u = item.units[k]; } }
+  if(!u || Q.sortSel.indexOf(u) >= 0){ return; }
+  Q.sortSel.push(u);
+  renderSort();
+  if(Q.sortSel.length === item.units.length){
+    var ok = true;
+    for(var m=0;m<item.order.length;m++){ if(Q.sortSel[m].id !== item.order[m]){ ok = false; } }
+    var chipHtml = '';
+    for(var n=0;n<Q.sortSel.length;n++){
+      var right = (Q.sortSel[n].id === item.order[n]);
+      chipHtml += '<div class="sort-chip '+(right?'ok':'bad')+'">'+Q.sortSel[n].t+'</div>';
+    }
+    document.getElementById('sortChips').innerHTML = chipHtml;
+    grade(ok, item.ex);
+  }
+}
+function resetSort(){
+  if(!Q || Q.answered){ return; }
+  Q.sortSel = [];
+  renderSort();
+}
+function renderQ(){
+  if(!Q){ return; }
+  Q.answered = false;
+  Q.sortSel = [];
+  document.getElementById('quizProg').textContent = '第 '+(Q.i+1)+' / '+Q.bank.length+' 题';
+  document.getElementById('quizScore').textContent = Q.score;
+  document.getElementById('quizFb').innerHTML = '';
+  document.getElementById('quizNext').style.display = 'none';
+  var item = Q.bank[Q.i];
+  var body = '';
+  if(item.type === 'unit' || item.type === 'method'){
+    body += '<div class="q-text">'+item.scene+'　'+item.text+'</div>'
+          + '<div class="opts">';
+    for(var j=0;j<item.opts.length;j++){
+      body += '<button class="opt unit-opt" data-v="'+j+'" onclick="answerSingle('+j+')">'+item.opts[j].t+'<span class="sym">'+item.opts[j].s+'</span></button>';
+    }
+    body += '</div>';
+  } else if(item.type === 'ruler'){
+    body += '<div class="q-text">量一量，这根铅笔有多长？</div>'
+          + rulerSVG(item.mm)
+          + '<div class="opts">';
+    for(var r=0;r<item.opts.length;r++){
+      body += '<button class="opt" data-v="'+r+'" onclick="answerSingle('+r+')">'+item.opts[r]+'</button>';
+    }
+    body += '</div>';
+  } else if(item.type === 'conv'){
+    body += '<div class="q-text">填一填，选一选：</div>'
+          + '<div class="q-expr">'+item.text+'</div>'
+          + '<div class="opts">';
+    for(var c=0;c<item.opts.length;c++){
+      body += '<button class="opt" data-v="'+c+'" onclick="answerSingle('+c+')">'+item.opts[c]+'</button>';
+    }
+    body += '</div>';
+  } else if(item.type === 'cmp'){
+    body += '<div class="q-text">比一比，选一选：</div>'
+          + '<div class="q-expr">'+item.left+' <span class="op-sub">○</span> '+item.right+'</div>'
+          + '<div class="opts">';
+    for(var m=0;m<item.opts.length;m++){
+      body += '<button class="opt" data-v="'+m+'" onclick="answerSingle('+m+')">'+item.opts[m]+'</button>';
+    }
+    body += '</div>';
+  } else if(item.type === 'judge'){
+    body += '<div class="q-text">对还是错？</div>'
+          + '<div class="q-sub">'+item.q+'</div>'
+          + '<div class="opts">'
+          +   '<button class="opt" data-v="1" onclick="answerJudge(1)">✅ 对</button>'
+          +   '<button class="opt" data-v="0" onclick="answerJudge(0)">❌ 错</button>'
+          + '</div>';
+  } else if(item.type === 'story'){
+    body += '<div class="story-card"><span class="scene">'+item.scene+'</span>'+item.text+'</div>'
+          + '<div class="q-sub">先想一想，再选出答案</div>'
+          + '<div class="opts">';
+    for(var s=0;s<item.opts.length;s++){
+      body += '<button class="opt" data-v="'+s+'" onclick="answerSingle('+s+')">'+item.opts[s]+'</button>';
+    }
+    body += '</div>';
+  } else if(item.type === 'sort'){
+    body += '<div class="q-text">'+item.q+'</div>'
+          + '<div class="sort-wrap">'
+          +   '<div class="sort-slots" id="sortSlots"></div>'
+          +   '<div class="sort-chips" id="sortChips"></div>'
+          + '</div>'
+          + '<div class="hint-row">'
+          +   '<button class="btn small" onclick="resetSort()">↩️ 重排</button>'
+          + '</div>';
+  }
+  document.getElementById('quizBody').innerHTML = body;
+  if(item.type === 'sort'){ renderSort(); }
+}
+function grade(ok, ex){
+  Q.answered = true;
+  Q.score = Math.max(0, Q.score + (ok ? 10 : -5));
+  document.getElementById('quizScore').textContent = Q.score;
+  sfx(ok);
+  document.getElementById('quizFb').innerHTML =
+      '<div class="fb '+(ok?'ok':'bad')+'" style="margin-top:16px">'
+    + (ok ? '🎉 答对啦！+10 分' : '💪 答错啦，−5 分') + '　' + ex + '</div>';
+  var nx = document.getElementById('quizNext');
+  nx.textContent = (Q.i === Q.bank.length-1) ? '看成绩 →' : '下一题 →';
+  nx.style.display = '';
+  if(ok){ speak('答对啦！'); }else{ speak('答错啦，' + ex); }
+}
+function answerSingle(j){
+  if(!Q || Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var ok = (j === item.a);
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var v = parseInt(opts[k].getAttribute('data-v'),10);
+    if(v === item.a){ opts[k].classList.add('ok'); }
+    else if(v === j){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, item.ex);
+}
+function answerJudge(v){
+  if(!Q || Q.answered){ return; }
+  var item = Q.bank[Q.i];
+  var ok = (v === (item.a ? 1 : 0));
+  var opts = document.getElementById('quizBody').querySelectorAll('.opt');
+  for(var k=0;k<opts.length;k++){
+    var vv = parseInt(opts[k].getAttribute('data-v'),10);
+    if(vv === (item.a?1:0)){ opts[k].classList.add('ok'); }
+    else if(vv === v){ opts[k].classList.add('bad'); }
+  }
+  grade(ok, item.ex);
+}
+function nextQ(){
+  if(!Q){ return; }
+  Q.i++;
+  if(Q.i >= Q.bank.length){ finishQuiz(); } else { renderQ(); }
+}
+
+/* =====================================================
+   结算
+===================================================== */
+function finishQuiz(){
+  stopTimer();
+  var meta = MODE_META[Q.mode];
+  var bonus = Q.timed ? Q.timeLeft * 2 : 0;
+  var sc = Q.score + bonus;
+  var maxSc = meta.qs * 10 + (Q.timed ? 120 : 0);
+  var st = sc >= 0.75*maxSc ? 3 : (sc >= 0.5*maxSc ? 2 : (sc >= 0.25*maxSc ? 1 : 0));
+  G.stars[meta.level] = Math.max(G.stars[meta.level], st);
+  G.best[meta.level] = Math.max(G.best[meta.level], sc);
+  var newUnlock = false;
+  if(st >= 1 && meta.level < 5){
+    var old = G.unlocked;
+    G.unlocked = Math.max(G.unlocked, meta.level + 1);
+    if(G.unlocked > old){ newUnlock = true; }
+  }
+  save();
+  var allStars = G.stars[1]>0 && G.stars[2]>0 && G.stars[3]>0 && G.stars[4]>0 && G.stars[5]>0;
+  document.getElementById('rScore').textContent = sc;
+  document.getElementById('rStars').innerHTML = starStr(st, 3);
+  var msg;
+  if(st === 3){ msg = '太棒了！你就是小小测量师！🏆'; }
+  else if(st === 2){ msg = '真不错！再练一练就能拿满分！'; }
+  else if(st === 1){ msg = '有进步！回去看看规则，下次更高分！'; }
+  else{ msg = '没关系，回到规则卡再学一学，一定行！'; }
+  if(bonus > 0){ msg += '（含时间奖励 +'+bonus+' 分）'; }
+  if(newUnlock){ msg += '　🎉 新关卡解锁啦！'; }
+  if(allStars){ msg += '　🏅 测量师徽章已解锁！'; }
+  document.getElementById('rMsg').textContent = msg;
+  document.getElementById('rRetry').textContent = meta.retry;
+  var conf = document.getElementById('confetti');
+  var emos = ['🎉','🎊','⭐','✨','📏','📐','🧭','🏔️','🌈'];
+  var ch = '';
+  for(var ci=0; ci<16; ci++){
+    ch += '<span style="left:'+(6+Math.random()*88).toFixed(1)+'%;font-size:'+(20+Math.random()*26).toFixed(1)+'px;'
+        + 'animation-duration:'+(2.2+Math.random()*2.2).toFixed(2)+'s;animation-delay:'+(Math.random()*0.8).toFixed(2)+'s">'
+        + emos[ci%emos.length]+'</span>';
+  }
+  conf.innerHTML = ch;
+  showView('view-result');
+  if(st > 0){ sfx(true); }
+}
+function retryChallenge(){
+  if(Q){ startChallenge(Q.mode); }
+}
+
+/* =====================================================
+   键盘支持（1-4 选答案，Enter 下一题）
+===================================================== */
+document.addEventListener('keydown', function(e){
+  var qz = document.getElementById('view-quiz');
+  if(!qz || qz.style.display === 'none' || !Q){ return; }
+  if(Q.answered){
+    if(e.key === 'Enter'){
+      var nx = document.getElementById('quizNext');
+      if(nx && nx.style.display !== 'none'){ nextQ(); }
+    }
+    return;
+  }
+  if(e.key >= '1' && e.key <= '4'){
+    var opts = document.querySelectorAll('#quizBody .opt');
+    var idx = parseInt(e.key, 10) - 1;
+    if(opts[idx]){ opts[idx].click(); }
+  }
+});
+
+/* =====================================================
+   启动
+===================================================== */
+load();
+document.getElementById('muteBtn').textContent = G.muted ? '🔇' : '🔊';
+renderHome();
+showView('view-home');
+if('speechSynthesis' in window){
+  speechSynthesis.getVoices();
+  if(speechSynthesis.onvoiceschanged !== undefined){
+    speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); };
+  }
+}
+</script>
+</body>
+</html>
